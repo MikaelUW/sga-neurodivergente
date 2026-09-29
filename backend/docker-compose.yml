@@ -1,0 +1,62 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: sgan_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    networks:
+      - sgan_network
+    depends_on:
+      - db
+
+  web:
+    image: nginx:alpine
+    container_name: sgan_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - sgan_network
+    depends_on:
+      - app
+
+  db:
+    image: postgres:16-alpine
+    container_name: sgan_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sgan_db
+      POSTGRES_USER: sgan_user
+      POSTGRES_PASSWORD: sgan_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - sgan_network
+
+  adminer:
+    image: adminer:latest
+    container_name: sgan_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - sgan_network
+    depends_on:
+      - db
+
+networks:
+  sgan_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

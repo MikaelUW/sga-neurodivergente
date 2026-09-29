@@ -1,0 +1,290 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sistema de Gestão de Alunos Neurodivergentes (SGAN API)",
+    "description": "API RESTful em Laravel 11 para cadastro de alunos, plano de manejo comportamental, histórico de ocorrências criptografadas e prontuário com laudos médicos.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api",
+      "description": "Servidor de Desenvolvimento (Docker)"
+    }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "summary": "Autenticar usuário e obter Bearer Token (UC01)",
+        "tags": ["Autenticação"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login": { "type": "string", "example": "admin@escola.edu.br" },
+                  "password": { "type": "string", "example": "admin123" }
+                },
+                "required": ["login", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Autenticado com sucesso" },
+          "401": { "description": "Credenciais inválidas" }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "summary": "Obter dados do usuário autenticado",
+        "tags": ["Autenticação"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Dados do usuário e seu perfil" }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Encerrar sessão / revogar token",
+        "tags": ["Autenticação"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Sessão encerrada com sucesso" }
+        }
+      }
+    },
+    "/alunos": {
+      "get": {
+        "summary": "Listar todos os alunos (UC04)",
+        "tags": ["Alunos"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Lista de alunos cadastrados" }
+        }
+      },
+      "post": {
+        "summary": "Cadastrar novo aluno (UC02 - Admin)",
+        "tags": ["Alunos"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": { "type": "string", "example": "João da Silva" },
+                  "data_nascimento": { "type": "string", "format": "date", "example": "2016-05-12" },
+                  "necessidades_especiais": { "type": "string", "example": "TEA Nível 1" },
+                  "observacoes_gerais": { "type": "string", "example": "Sensível a ruídos agudos" }
+                },
+                "required": ["nome"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Aluno cadastrado" },
+          "403": { "description": "Acesso negado" }
+        }
+      }
+    },
+    "/alunos/{id}": {
+      "get": {
+        "summary": "Consultar perfil completo do aluno (UC04)",
+        "tags": ["Alunos"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Dados completos do aluno com relacionamentos" },
+          "404": { "description": "Aluno não encontrado" }
+        }
+      },
+      "put": {
+        "summary": "Atualizar cadastro do aluno (UC02 - Admin)",
+        "tags": ["Alunos"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Aluno atualizado" }
+        }
+      },
+      "delete": {
+        "summary": "Remover aluno (UC02 - Admin)",
+        "tags": ["Alunos"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Aluno removido" }
+        }
+      }
+    },
+    "/alunos/{alunoId}/info-operacional": {
+      "post": {
+        "summary": "Vincular informação operacional / manejo (UC03 - Admin)",
+        "tags": ["Informações Operacionais"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "alunoId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gatilho_comportamental": { "type": "string", "example": "Excesso de ruído" },
+                  "acao_recomendada": { "type": "string", "example": "Uso de abafador acústico" },
+                  "prioridade": { "type": "string", "enum": ["alta", "media", "baixa"], "example": "alta" }
+                },
+                "required": ["gatilho_comportamental", "acao_recomendada", "prioridade"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Informação criada com sucesso" }
+        }
+      }
+    },
+    "/ocorrencias": {
+      "post": {
+        "summary": "Registrar ocorrência comportamental (UC05 - Monitora / Admin)",
+        "tags": ["Ocorrências"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "aluno_id": { "type": "integer", "example": 1 },
+                  "descricao_fatos": { "type": "string", "example": "Agitação durante aula" },
+                  "tipo_intervencao": { "type": "string", "example": "Intervenção verbal e abafador" }
+                },
+                "required": ["aluno_id", "descricao_fatos", "tipo_intervencao"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Ocorrência registrada e cifrada no banco" }
+        }
+      }
+    },
+    "/alunos/{alunoId}/ocorrencias": {
+      "get": {
+        "summary": "Consultar histórico de ocorrências decifrado (UC06)",
+        "tags": ["Ocorrências"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "alunoId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Histórico de ocorrências do aluno" }
+        }
+      }
+    },
+    "/alunos/{alunoId}/laudos": {
+      "post": {
+        "summary": "Upload de laudo médico PDF (UC09 - Admin)",
+        "tags": ["Laudos Médicos"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "alunoId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "arquivo": { "type": "string", "format": "binary" },
+                  "crm_medico": { "type": "string", "example": "CRM/SP 123456" },
+                  "especialidade": { "type": "string", "example": "Neuropediatria" }
+                },
+                "required": ["arquivo", "crm_medico", "especialidade"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Laudo enviado com sucesso" }
+        }
+      }
+    },
+    "/laudos/{id}/download": {
+      "get": {
+        "summary": "Download de laudo médico PDF (UC09)",
+        "tags": ["Laudos Médicos"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Download do arquivo PDF" }
+        }
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "summary": "Listar todos os usuários e perfis (UC07 - Admin)",
+        "tags": ["Permissões"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Lista de usuários" }
+        }
+      }
+    },
+    "/usuarios/{usuarioId}/permissoes": {
+      "put": {
+        "summary": "Atualizar nível de acesso do administrador (UC07 - Admin)",
+        "tags": ["Permissões"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "usuarioId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nivel_acesso": { "type": "integer", "minimum": 1, "maximum": 5, "example": 5 },
+                  "setor": { "type": "string", "example": "Diretoria Pedagógica" }
+                },
+                "required": ["nivel_acesso"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Permissões atualizadas" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+# ─── Backend / Laravel (PHP) ───────────────────────────────
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/.phpunit.result.cache
+backend/storage/*.key
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/app/public/*
+backend/public/storage
+backend/public/hot
+backend/bootstrap/cache/*.php
+backend/Homestead.json
+backend/Homestead.yaml
+backend/auth.json
+
+# ─── Frontend (Node) ───────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+frontend/npm-debug.log*
+frontend/yarn-error.log*
+
+# ─── Ambiente / segredos (nunca commitar) ──────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ─── Sistema operacional ───────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Editores / IDEs ───────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ─── Logs gerais ───────────────────────────────────────────
+*.log

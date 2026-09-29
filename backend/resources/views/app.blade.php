@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Sistema de Gestão de Alunos Neurodivergentes - SGA</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ffffff'/%3E%3Ctext x='50' y='60' font-size='40' font-family='Montserrat, sans-serif' font-weight='700' fill='%2300326c' text-anchor='middle'%3ESGA%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    
+    <!-- Google Fonts: Roboto e Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Assets Personalizados Laravel -->
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#1771BF',
+                            green: '#09E51D',
+                            yellow: '#FAC51F',
+                            red: '#F21D1D',
+                            grayLight: '#FAFAFA',
+                            grayBg: '#F2F2F2',
+                            graySecondary: '#F2EAE2'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                        title: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="{{ asset('js/app.js') }}" defer></script>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- SIMULADOR DE PERFIL DE ACESSO -->
+    <div class="bg-slate-900 text-white text-xs px-4 py-2 flex justify-between items-center z-50">
+        <div>
+            <span class="font-bold text-amber-400"><i class="fa-solid fa-circle-info mr-1"></i> MODO DE SIMULAÇÃO PI (SGA Laravel):</span>
+            Alterne os perfis para testar o painel administrativo ou operacional.
+        </div>
+        <div class="flex gap-2">
+            <button onclick="simularPerfil('login')" class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-[10px]">Ir para Login</button>
+            <button onclick="simularPerfil('admin')" class="bg-brand-blue hover:opacity-90 px-2 py-1 rounded text-[10px] font-semibold">Perfil Admin</button>
+            <button onclick="simularPerfil('monitora')" class="bg-emerald-600 hover:opacity-90 px-2 py-1 rounded text-[10px] font-semibold">Perfil Monitora</button>
+        </div>
+    </div>
+
+    <!-- TELA DE LOGIN (Nível 0) -->
+    <div id="tela-login" class="flex-grow flex relative overflow-hidden gradient-brand-bg">
+        <!-- Coluna Visual -->
+        <div class="hidden lg:flex lg:w-5/12 relative overflow-hidden flex-col justify-between p-16 text-white">
+            <div class="absolute -top-24 -left-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-1/4 -right-24 w-80 h-80 bg-white/20 rounded-full blur-3xl"></div>
+
+            <div class="relative z-10 flex items-center gap-3">
+                <div class="bg-white text-brand-blue p-2 rounded-lg font-black text-xl font-title">SGA</div>
+                <span class="font-bold text-lg tracking-wider font-title">SGA Neurodivergente</span>
+            </div>
+
+            <div class="relative z-10 max-w-md">
+                <h2 class="text-3xl font-bold font-title leading-tight mb-4">Centralizando cuidados, espalhando empatia.</h2>
+                <p class="text-white/90 text-sm leading-relaxed">
+                    Uma plataforma projetada especificamente para monitoras e administradores escolares gerenciarem perfis, laudos e ocorrências com total segurança e afeto.
+                </p>
+            </div>
+
+            <div class="relative z-10 text-xs text-blue-100">
+                Desenvolvido por Gabriella Céspedes & Mikael Zana &copy; {{ date('Y') }}
+            </div>
+        </div>
+
+        <!-- Coluna de Formulário -->
+        <div class="w-full lg:w-7/12 flex items-center justify-center p-6 lg:p-16 relative lg:bg-brand-grayBg">
+            <div class="absolute top-6 left-6 lg:hidden flex items-center gap-2">
+                <div class="bg-white text-brand-blue p-1.5 rounded font-black text-sm font-title">SGA</div>
+                <span class="font-bold text-sm tracking-wider font-title text-white drop-shadow-sm">SGA Neurodivergente</span>
+            </div>
+
+            <div class="w-full max-w-md glass-panel rounded-2xl shadow-[0_20px_40px_rgba(23,113,191,0.12)] p-8 lg:p-10 border border-white/50 relative z-10 mt-16 lg:mt-0">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 font-title">Bem-vindo de volta</h3>
+                    <p class="text-gray-500 text-sm mt-1">Insira suas credenciais para acessar a plataforma.</p>
+                </div>
+
+                <div id="login-erro" class="hidden bg-red-50 border-l-4 border-brand-red text-brand-red p-3 rounded mb-4 text-xs font-medium">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciais inválidas. Use os exemplos de teste abaixo.
+                </div>
+
+                <form onsubmit="realizarLogin(event)" class="space-y-5">
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase" for="login-email">E-mail Profissional</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                                <i class="fa-regular fa-envelope"></i>
+                            </span>
+                            <input type="email" id="login-email" required
+                                class="soft-input w-full pl-11 pr-4 py-3 border border-transparent rounded-lg text-sm text-gray-800 focus:outline-none"
+                                placeholder="nome@instituicao.edu.br">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase" for="login-senha">Senha</label>
+                            <a href="#" class="text-[11px] font-semibold text-brand-blue hover:underline">Esqueceu a senha?</a>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input type="password" id="login-senha" required
+                                class="soft-input w-full pl-11 pr-11 py-3 border border-transparent rounded-lg text-sm text-gray-800 focus:outline-none"
+                                placeholder="••••••••">
+                            <button type="button" onclick="alternarVisibilidadeSenha(this)"
+                                class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-brand-blue transition-colors focus:outline-none">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" id="lembrar-me"
+                            class="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue cursor-pointer">
+                        <label for="lembrar-me" class="ml-2 text-xs text-gray-500 cursor-pointer">Lembrar de mim</label>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full flex justify-center items-center gap-2 py-3.5 px-6 rounded-xl text-white font-semibold text-sm font-title shadow gradient-brand-btn transition-all duration-200 hover:shadow-[0_8px_16px_rgba(23,113,191,0.25)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
+                        Entrar na Plataforma
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- Dica rápida de teste -->
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <span class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Credenciais de Teste:</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="preencherCredenciais('admin')" class="text-left bg-blue-50 hover:bg-blue-100 p-2 rounded text-[11px] border border-blue-200 transition-colors">
+                            <span class="font-bold text-brand-blue block">Administrador:</span>
+                            <span class="text-gray-600 block">admin@instituicao.edu.br</span>
+                            <span class="text-gray-400">Senha: admin123</span>
+                        </button>
+                        <button onclick="preencherCredenciais('monitora')" class="text-left bg-emerald-50 hover:bg-emerald-100 p-2 rounded text-[11px] border border-emerald-200 transition-colors">
+                            <span class="font-bold text-emerald-700 block">Monitora:</span>
+                            <span class="text-gray-600 block">monitora@instituicao.edu.br</span>
+                            <span class="text-gray-400">Senha: monitora123</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTRUTURA PRINCIPAL DO SISTEMA APÓS LOGIN (Navbar + Sidebar + Conteúdo) -->
+    <div id="sistema-dashboard" class="hidden flex-grow flex flex-col md:flex-row">
+        
+        <!-- SIDEBAR DE NAVEGAÇÃO -->
+        <aside class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col justify-between">
+            <div>
+                <!-- Identidade Visual do Topo -->
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-brand-blue text-white p-1.5 rounded font-black text-sm">SGA</div>
+                        <span class="font-bold text-sm tracking-wide text-gray-800 font-title">SGA Neurodivergente</span>
+                    </div>
+                    <!-- Badge de Perfil Ativo -->
+                    <span id="badge-perfil-sidebar" class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full"></span>
+                </div>
+
+                <!-- Informações do Usuário Ativo -->
+                <div class="px-6 py-4 border-b border-gray-50 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-gray-600 font-bold font-title text-sm" id="avatar-usuario">
+                        U
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-800" id="nome-usuario-sidebar">Usuário Geral</h4>
+                        <p class="text-[10px] text-gray-400" id="cargo-usuario-sidebar">Monitora</p>
+                    </div>
+                </div>
+
+                <!-- Links de Navegação Dinâmicos (Filtrados por Perfil) -->
+                <nav class="p-4 space-y-1">
+                    <!-- Links ADMIN -->
+                    <div id="menu-admin" class="space-y-1 hidden">
+                        <button onclick="navegarPara('admin-dashboard')" id="btn-admin-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 bg-blue-50 text-brand-blue">
+                            <i class="fa-solid fa-chart-line w-5 text-center"></i>
+                            Dashboard Admin
+                        </button>
+                        <button onclick="navegarPara('admin-cadastro')" id="btn-admin-cadastro" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-user-plus w-5 text-center"></i>
+                            Cadastro & Protocolos
+                        </button>
+                        <button onclick="navegarPara('admin-laudos')" id="btn-admin-laudos" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-file-medical w-5 text-center"></i>
+                            Laudos e Permissões
+                        </button>
+                    </div>
+
+                    <!-- Links MONITORA -->
+                    <div id="menu-monitora" class="space-y-1 hidden">
+                        <button onclick="navegarPara('monitora-dashboard')" id="btn-monitora-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 bg-emerald-50 text-emerald-700">
+                            <i class="fa-solid fa-chalkboard-user w-5 text-center"></i>
+                            Dashboard Monitora
+                        </button>
+                        <button onclick="navegarPara('monitora-perfil')" id="btn-monitora-perfil" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-id-card-clip w-5 text-center"></i>
+                            Consultar Perfil Aluno
+                        </button>
+                        <button onclick="navegarPara('monitora-ocorrencia')" id="btn-monitora-ocorrencia" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-circle-exclamation w-5 text-center"></i>
+                            Lançar Ocorrência
+                        </button>
+                        <button onclick="navegarPara('monitora-historico')" id="btn-monitora-historico" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                            Histórico Ocorrências
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Botão de Sair -->
+            <div class="p-4 border-t border-gray-100">
+                <button onclick="realizarLogout()" class="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-3 transition">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                    Sair do Sistema
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="flex-grow p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+            
+            <!-- ALERTA GLOBAL DE NOTIFICAÇÃO -->
+            <div id="alerta-sucesso" class="hidden transform translate-y-2 transition duration-300 bg-emerald-50 border-l-4 border-brand-green text-emerald-800 p-4 rounded-r shadow-md mb-6 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-brand-green"></i>
+                    <span id="alerta-sucesso-texto" class="text-sm font-medium">Ação realizada com sucesso!</span>
+                </div>
+                <button onclick="fecharAlerta()" class="text-emerald-500 hover:text-emerald-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- SEÇÃO 1: DASHBOARD ADMINISTRADOR -->
+            <section id="sec-admin-dashboard" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 font-title">Dashboard Administrativo</h2>
+                        <p class="text-sm text-gray-500">Visão geral da governança, alunos e usuários do sistema.</p>
+                    </div>
+                    <div class="bg-blue-100 text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-brand-blue rounded-full animate-ping"></span>
+                        Laravel Sanctum & PostgreSQL Ativo
+                    </div>
+                </div>
+
+                <!-- Cards de Métricas -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-group"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title" id="card-total-alunos">0</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Alunos Atendidos</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title" id="card-total-ocorrencias">0</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Ocorrências Cifradas</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title" id="card-total-laudos">0</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Laudos Registrados</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-red-50 text-brand-red flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title">2</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Monitores Ativos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controle Rápido -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Ações Administrativas</h3>
+                        <button onclick="navegarPara('admin-cadastro')" class="w-full bg-brand-blue hover:opacity-90 text-white p-3 rounded-lg text-xs font-semibold flex items-center justify-between transition">
+                            <span><i class="fa-solid fa-user-plus mr-2"></i> Cadastrar Aluno & Protocolo</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button onclick="navegarPara('admin-laudos')" class="w-full bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-lg text-xs font-semibold flex items-center justify-between transition">
+                            <span><i class="fa-solid fa-file-arrow-up mr-2"></i> Upload de Laudos Clínicos</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button onclick="navegarPara('admin-laudos')" class="w-full bg-brand-graySecondary hover:opacity-90 text-slate-800 p-3 rounded-lg text-xs font-semibold flex items-center justify-between transition border border-gray-300">
+                            <span><i class="fa-solid fa-user-lock mr-2"></i> Configurar Permissões</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2 space-y-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Alunos Cadastrados no Banco (TB04)</h3>
+                            <button onclick="navegarPara('admin-cadastro')" class="text-brand-blue text-xs font-semibold hover:underline">Ver Todos</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider text-[10px] font-bold">
+                                    <tr>
+                                        <th class="p-3">ID</th>
+                                        <th class="p-3">Nome</th>
+                                        <th class="p-3">Data Nasc.</th>
+                                        <th class="p-3">Necessidades</th>
+                                        <th class="p-3">Protocolos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-alunos-dashboard" class="divide-y divide-gray-100 text-gray-700">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 2: TELA DE CADASTRO DE ALUNOS E PROTOCOLOS (UC02/UC03) -->
+            <section id="sec-admin-cadastro" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Cadastro de Alunos & Protocolos Operacionais</h2>
+                    <p class="text-sm text-gray-500">Mantenha a base de dados de alunos (TB04) e anexe os planos de ação preventiva (TB05).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <form onsubmit="cadastrarAlunoCompleto(event)" class="space-y-6">
+                            <div>
+                                <h3 class="text-xs font-bold text-brand-blue uppercase tracking-wider mb-4 border-b border-blue-50 pb-2">
+                                    <i class="fa-regular fa-id-card mr-1"></i> Dados Cadastrais do Aluno (UC02)
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Completo</label>
+                                        <input type="text" id="cad-nome" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: João da Silva Santos">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data de Nascimento</label>
+                                        <input type="date" id="cad-nasc" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Necessidades Especiais</label>
+                                        <input type="text" id="cad-necessidades" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: TEA Nível de Suporte 1, TDAH, Sensibilidade Auditiva">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Observações Gerais</label>
+                                        <textarea id="cad-obs" rows="2"
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Anotações comportamentais gerais relevantes para a escola..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                <h3 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-4 border-b border-blue-100 pb-2 flex justify-between items-center">
+                                    <span><i class="fa-solid fa-arrows-spin mr-1"></i> Vincular Protocolo Operacional de Crise (UC03)</span>
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[9px] font-semibold">TB05 - Info Operacional</span>
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-blue-900 uppercase mb-1">Gatilho Comportamental (O que causa crises?)</label>
+                                        <input type="text" id="cad-gatilho" required
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: Excesso de ruídos (sinal da escola, gritos de crianças)">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-blue-900 uppercase mb-1">Ação Recomendada (Como a monitora deve agir?)</label>
+                                        <textarea id="cad-acao" rows="2" required
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: Entregar abafadores de som ao aluno e redirecioná-lo para a sala de recursos tranquila."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-blue-900 uppercase mb-1">Prioridade do Protocolo</label>
+                                        <select id="cad-prioridade" required
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                            <option value="Alta" class="text-red-600 font-bold">Alta Prioridade</option>
+                                            <option value="Média" class="text-amber-600">Média Prioridade</option>
+                                            <option value="Baixa" class="text-green-600">Baixa Prioridade</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-3 pt-4">
+                                <button type="reset" class="px-5 py-2 rounded text-xs font-bold text-gray-500 hover:bg-gray-100 transition">Limpar Campos</button>
+                                <button type="submit" class="bg-brand-blue hover:opacity-95 text-white px-6 py-2 rounded text-xs font-bold font-title flex items-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Salvar Registro Completo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">Rastreabilidade PI (E7/E4)</h4>
+                            <ul class="space-y-3 text-xs text-gray-600">
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-circle-nodes text-brand-blue mt-0.5"></i>
+                                    <span><strong>UC02:</strong> Realiza um <code>POST /api/alunos</code> para inserir dados pessoais com consentimento LGPD.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-circle-nodes text-brand-blue mt-0.5"></i>
+                                    <span><strong>UC03:</strong> Associa o ID do aluno ao protocolo via <code>POST /api/alunos/{id}/info-operacional</code>.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                                    <span><strong>Composição Laravel Eloquent:</strong> Se o aluno for excluído, seus planos operacionais são preservados ou removidos respeitando o SoftDelete.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 3: LAUDOS E PERMISSÕES (UC09 / UC07) -->
+            <section id="sec-admin-laudos" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Laudos Médicos & Controle de Permissões</h2>
+                    <p class="text-sm text-gray-500">Módulo administrativo para custódia de documentos clínicos (UC09) e atualização de privilégios de acessos (UC07).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start border-b border-gray-100 pb-3 mb-4">
+                                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-file-medical text-brand-blue mr-1"></i> Upload de Laudo Médico (UC09)
+                                </h3>
+                                <span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded">Storage Privado</span>
+                            </div>
+
+                            <form onsubmit="registrarLaudo(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Selecionar Aluno</label>
+                                    <select id="laudo-aluno-id" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="">Selecione um Aluno...</option>
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">CRM Médico</label>
+                                        <input type="text" id="laudo-crm" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: CRM-SP 12345">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Especialidade Médica</label>
+                                        <input type="text" id="laudo-especialidade" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: Neuropediatra">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Arquivo PDF do Laudo</label>
+                                    <div class="border-2 border-dashed border-gray-300 hover:border-brand-blue rounded-lg p-6 text-center cursor-pointer bg-gray-50/50 transition relative">
+                                        <input type="file" id="laudo-arquivo" required accept=".pdf" onchange="mostrarArquivoSelecionado(this)"
+                                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                        <i class="fa-regular fa-file-pdf text-3xl text-gray-400 mb-2 block" id="pdf-icon-upload"></i>
+                                        <span class="block text-xs font-semibold text-gray-600" id="pdf-upload-nome">Arraste ou clique para anexar arquivo PDF</span>
+                                        <span class="text-[10px] text-gray-400 block mt-1">Armazenamento em disco privado seguro com log de auditoria LGPD</span>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded text-xs tracking-wide uppercase transition flex justify-center items-center gap-1.5">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    Processar Upload e Salvar Metadados
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start border-b border-gray-100 pb-3 mb-4">
+                                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-user-lock text-brand-blue mr-1"></i> Configurar Permissões de Usuários (UC07)
+                                </h3>
+                                <span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded">Níveis Privilegiados</span>
+                            </div>
+
+                            <form onsubmit="alterarPermissao(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Selecionar Usuário / Monitora</label>
+                                    <select id="perm-usuario" required onchange="carregarNivelAtual(this)"
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="">Selecione um usuário...</option>
+                                        <option value="Ana Silva" data-perfil="Monitora" data-nivel="1">Ana Silva (ID: #991 - Monitora)</option>
+                                        <option value="Mikael Zana" data-perfil="Admin" data-nivel="2">Mikael Zana (ID: #102 - Admin)</option>
+                                        <option value="Gabriella Céspedes" data-perfil="Admin" data-nivel="2">Gabriella Céspedes (ID: #101 - Admin)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Alterar Nível de Acesso (Perfil)</label>
+                                    <select id="perm-nivel" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="1">Nível 1 - Monitora Base (Leitura / Lançar Ocorrências)</option>
+                                        <option value="2">Nível 2 - Administrador Escolar (Acesso Total / Cadastros)</option>
+                                    </select>
+                                </div>
+
+                                <div class="bg-amber-50 border-l-4 border-brand-yellow p-3 rounded text-xs text-amber-900">
+                                    <i class="fa-solid fa-triangle-exclamation text-brand-yellow mr-1"></i>
+                                    <strong>Atenção:</strong> Alterar o nível de acesso modificará os privilégios do usuário imediatamente na próxima sessão.
+                                </div>
+
+                                <button type="submit" class="w-full bg-brand-blue hover:opacity-90 text-white font-bold py-2.5 rounded text-xs tracking-wide uppercase transition flex justify-center items-center gap-1.5">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                    Atualizar Nível de Acesso
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 4: DASHBOARD MONITORA -->
+            <section id="sec-monitora-dashboard" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 font-title">Dashboard da Monitora</h2>
+                        <p class="text-sm text-gray-500">Acesso rápido aos perfis de alunos e protocolos preventivos.</p>
+                    </div>
+                    <div class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></span>
+                        Acompanhamento em Tempo Real
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-teal-50 to-emerald-50 border border-emerald-100 rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Tom de Voz: Empático & Seguro</span>
+                        <h3 class="text-lg font-bold text-slate-800 font-title">Como foi sua rotina de monitoramento hoje?</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed max-w-2xl">
+                            Consulte as Regras de Manejo antes do início das aulas. Lembre-se que agir de acordo com as ações recomendadas ajuda a prevenir crises de sobrecarga sensorial.
+                        </p>
+                    </div>
+                    <button onclick="navegarPara('monitora-perfil')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded text-xs flex items-center gap-2 shadow-md shrink-0 transition">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Consultar Perfil de Aluno
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Suas Ações Rápidas</h3>
+                        <button onclick="navegarPara('monitora-perfil')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg text-xs font-semibold flex items-center gap-3 transition shadow">
+                            <i class="fa-solid fa-id-card-clip text-lg"></i>
+                            <div class="text-left">
+                                <span class="block font-bold">Consultar Perfil & Manejo</span>
+                                <span class="text-[10px] opacity-80 block">Visualização rápida de gatilhos</span>
+                            </div>
+                        </button>
+                        <button onclick="navegarPara('monitora-ocorrencia')" class="w-full bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-lg text-xs font-semibold flex items-center gap-3 transition shadow">
+                            <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                            <div class="text-left">
+                                <span class="block font-bold">Lançar Ocorrência Sensível</span>
+                                <span class="text-[10px] opacity-80 block">Criptografado em tempo real</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2 space-y-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Seus Alunos Designados</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="cards-alunos-monitora">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 5: CONSULTA DE PERFIL DO ALUNO (UC04) -->
+            <section id="sec-monitora-perfil" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Consulta de Perfil do Aluno</h2>
+                    <p class="text-sm text-gray-500">Acesso instantâneo a necessidades específicas e planos preventivos (UC04).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4 h-fit">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-100 pb-2">Selecionar Aluno</h3>
+                        <div class="space-y-2" id="lista-alunos-perfil-busca">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <div id="perfil-vazio" class="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center text-gray-400">
+                            <i class="fa-regular fa-id-badge text-5xl mb-4 text-gray-300 block"></i>
+                            <p class="text-sm">Selecione um aluno na lista lateral para carregar seu perfil completo.</p>
+                        </div>
+
+                        <div id="perfil-ativo" class="hidden space-y-6">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-16 h-16 rounded-full bg-blue-100 text-brand-blue flex items-center justify-center text-2xl font-bold font-title" id="perfil-iniciais">
+                                        JS
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-gray-800 font-title" id="perfil-nome">João da Silva</h3>
+                                        <p class="text-xs text-gray-500 mt-0.5" id="perfil-dados-basicos">Idade: 8 anos | TEA Nível Suporte 1</p>
+                                    </div>
+                                </div>
+                                <span class="bg-blue-50 text-brand-blue text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Ativo</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-stethoscope text-brand-blue mr-1"></i> Necessidades Especiais</h4>
+                                    <p class="text-sm font-semibold text-gray-800" id="perfil-necessidades-texto">TEA Nível de Suporte 1</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider"><i class="fa-regular fa-note-sticky text-brand-blue mr-1"></i> Observações Gerais</h4>
+                                    <p class="text-xs text-gray-600 leading-relaxed" id="perfil-obs-texto">Nenhuma observação.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-amber-50 to-amber-100 border-l-8 border-brand-yellow rounded-xl p-6 shadow-sm space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider">
+                                        <i class="fa-solid fa-triangle-exclamation text-brand-yellow mr-1"></i> Protocolo Preventivo e de Crise (Manejo)
+                                    </h4>
+                                    <span class="bg-brand-yellow/30 text-amber-900 text-[9px] font-bold px-2 py-0.5 rounded uppercase" id="perfil-prioridade-badge">Prioridade Alta</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    <div class="space-y-1">
+                                        <span class="block text-[10px] uppercase font-bold text-amber-700">Gatilho de Crise:</span>
+                                        <p class="text-sm font-semibold text-slate-800" id="perfil-gatilho">Excesso de Ruído</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <span class="block text-[10px] uppercase font-bold text-amber-700">Ação Recomendada (Imediata):</span>
+                                        <p class="text-sm font-bold text-amber-950" id="perfil-acao">Fornecer abafadores de som.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 6: LANÇAR NOVA OCORRÊNCIA (UC05) -->
+            <section id="sec-monitora-ocorrencia" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Registrar Ocorrências (Criptografada)</h2>
+                    <p class="text-sm text-gray-500">Módulo de relato sensível das ocorrências cotidianas do aluno (UC05). Os fatos sensíveis serão cifrados em tempo real.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <form onsubmit="registrarNovaOcorrencia(event)" class="space-y-4">
+                            <div class="bg-orange-50 border-l-4 border-orange-500 text-orange-800 p-4 rounded-r text-xs">
+                                <i class="fa-solid fa-shield-halved mr-1"></i>
+                                <strong>Nota de Segurança:</strong> A descrição dos fatos será criptografada (UC05/UC08) através de uma chave privada antes de ser salva no banco de dados para garantir a máxima privacidade do aluno.
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Aluno Alvo</label>
+                                    <select id="oc-aluno-id" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="">Selecione um Aluno...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Intervenção Aplicada</label>
+                                    <input type="text" id="oc-intervencao" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                        placeholder="Ex: Redirecionamento de foco, Abafador auditivo">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição dos Fatos (Sensível - Criptografado)</label>
+                                    <textarea id="oc-descricao" rows="4" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                        placeholder="Escreva detalhadamente o ocorrido..."></textarea>
+                                </div>
+                            </div>
+
+                            <div id="simulador-cripto" class="hidden bg-slate-900 text-white rounded p-4 text-xs font-mono space-y-2">
+                                <div class="flex items-center gap-2 text-emerald-400">
+                                    <i class="fa-solid fa-spinner animate-spin"></i>
+                                    <span>Iniciando CriptografiaService (AES-256)...</span>
+                                </div>
+                                <div class="text-gray-400">Texto Original: <span id="cripto-orig" class="text-white"></span></div>
+                                <div class="text-emerald-400">Cifrando Relato com Chave Privada...</div>
+                                <div class="text-amber-300 truncate">Resultado Cifrado: <span id="cripto-hash"></span></div>
+                            </div>
+
+                            <div class="flex justify-end gap-3 pt-4">
+                                <button type="reset" class="px-5 py-2 rounded text-xs font-bold text-gray-500 hover:bg-gray-100 transition">Limpar</button>
+                                <button type="submit" id="btn-salvar-ocorrencia" class="bg-brand-blue hover:opacity-95 text-white px-6 py-2.5 rounded text-xs font-bold font-title flex items-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-lock"></i>
+                                    Cifrar e Salvar Ocorrência
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                            <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Criptografia em Duas Etapas</h4>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                Este sistema protege relatos sensíveis. Apenas monitores e administradores autorizados com chave válida conseguem ler os fatos no histórico. No banco, os dados são guardados como hashes e cadeias ilegíveis (conforme UC08).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 7: HISTÓRICO DE OCORRÊNCIAS (UC06) -->
+            <section id="sec-monitora-historico" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 font-title">Histórico de Ocorrências</h2>
+                        <p class="text-sm text-gray-500">Listagem de ocorrências decifradas e apresentadas de forma legível após decifragem em lote (UC06).</p>
+                    </div>
+                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-key mr-1"></i> Decifrado via CriptografiaService</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 h-fit">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Filtrar por Aluno</label>
+                        <select id="hist-filtro-aluno" onchange="renderizarHistoricoOcorrencias()"
+                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                            <option value="todos">Todos os Alunos</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-3 space-y-4" id="container-lista-historico">
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- RODAPÉ FIXO -->
+    <footer class="bg-white border-t border-gray-200 py-4 px-6 text-center text-xs text-gray-400 mt-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-2">
+            <span>Sistema de Gestão de Alunos Neurodivergentes - SGA Laravel</span>
+            <div class="flex items-center gap-3 text-brand-blue">
+                <span>Feito por Gabriella Céspedes e Mikael Zana</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

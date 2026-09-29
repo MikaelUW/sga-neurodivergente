@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Alunos Neurodivergentes</title>
+    <!-- Google Fonts: Roboto e Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#1771BF',
+                            green: '#09E51D',
+                            yellow: '#FAC51F',
+                            red: '#F21D1D',
+                            grayLight: '#FAFAFA',
+                            grayBg: '#F2F2F2',
+                            graySecondary: '#F2EAE2'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                        title: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #F2F2F2;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- SIMULADOR DE PERFIL (Para trocar de visualização rapidamente sem deslogar) -->
+    <div class="bg-slate-900 text-white text-xs px-4 py-2 flex justify-between items-center z-50">
+        <div>
+            <span class="font-bold text-amber-400"><i class="fa-solid class fa-circle-info mr-1"></i> MODO DE SIMULAÇÃO PI (E7):</span>
+            Você pode alternar os perfis ou simular as ações do sistema em tempo real.
+        </div>
+        <div class="flex gap-2">
+            <button onclick="simularPerfil('login')" class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-[10px]">Ir para Login</button>
+            <button onclick="simularPerfil('admin')" class="bg-brand-blue hover:opacity-90 px-2 py-1 rounded text-[10px] font-semibold">Perfil Admin</button>
+            <button onclick="simularPerfil('monitora')" class="bg-emerald-600 hover:opacity-90 px-2 py-1 rounded text-[10px] font-semibold">Perfil Monitora</button>
+        </div>
+    </div>
+
+    <!-- TELA DE LOGIN (Nível 0) -->
+    <div id="tela-login" class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row">
+            <!-- Coluna Visual / Propaganda -->
+            <div class="md:w-1/2 bg-gradient-to-br from-[#1771BF] to-[#0d4e87] text-white p-12 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-6">
+                        <div class="bg-white text-brand-blue p-2 rounded-lg font-black text-xl">SGA</div>
+                        <span class="font-bold text-lg tracking-wider font-title">SGA Neurodivergente</span>
+                    </div>
+                    <h2 class="text-3xl font-bold font-title leading-tight mb-4">Centralizando cuidados, espalhando empatia.</h2>
+                    <p class="text-blue-100 text-sm leading-relaxed">
+                        Uma plataforma projetada especificamente para monitoras e administradores escolares gerenciarem perfis, laudos e ocorrências com total segurança e afeto.
+                    </p>
+                </div>
+                <div class="text-xs text-blue-200 mt-8">
+                    Desenvolvido por Gabriella Céspedes & Mikael Zana &copy; 2026
+                </div>
+            </div>
+
+            <!-- Coluna de Formulário -->
+            <div class="md:w-1/2 p-12 flex flex-col justify-center">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 font-title">Acesso ao Sistema</h3>
+                    <p class="text-gray-500 text-sm mt-1">Insira suas credenciais de acesso</p>
+                </div>
+
+                <div id="login-erro" class="hidden bg-red-50 border-l-4 border-brand-red text-brand-red p-3 rounded mb-4 text-xs font-medium">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciais inválidas. Use os exemplos de teste abaixo.
+                </div>
+
+                <form onsubmit="realizarLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">E-mail de Login</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                <i class="fa-regular fa-envelope"></i>
+                            </span>
+                            <input type="email" id="login-email" required
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" 
+                                placeholder="exemplo@instituicao.edu.br">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase">Senha</label>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input type="password" id="login-senha" required
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" 
+                                placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full bg-brand-blue hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow transition duration-200 text-sm font-title flex justify-center items-center gap-2 mt-6">
+                        <span>Entrar no Dashboard</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- Dica rápida de teste -->
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <span class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Credenciais de Teste (PI Encontro 7):</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="preencherCredenciais('admin')" class="text-left bg-blue-50 hover:bg-blue-100 p-2 rounded text-[11px] border border-blue-200">
+                            <span class="font-bold text-brand-blue block">Administrador:</span>
+                            <span class="text-gray-600 block">admin@instituicao.edu.br</span>
+                            <span class="text-gray-400">Senha: admin123</span>
+                        </button>
+                        <button onclick="preencherCredenciais('monitora')" class="text-left bg-emerald-50 hover:bg-emerald-100 p-2 rounded text-[11px] border border-emerald-200">
+                            <span class="font-bold text-emerald-700 block">Monitora:</span>
+                            <span class="text-gray-600 block">monitora@instituicao.edu.br</span>
+                            <span class="text-gray-400">Senha: monitora123</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ESTRUTURA PRINCIPAL DO SISTEMA APÓS LOGIN (Navbar + Sidebar + Conteúdo) -->
+    <div id="sistema-dashboard" class="hidden flex-grow flex flex-col md:flex-row">
+        
+        <!-- SIDEBAR DE NAVEGAÇÃO -->
+        <aside class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col justify-between">
+            <div>
+                <!-- Identidade Visual do Topo -->
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-brand-blue text-white p-1.5 rounded font-black text-sm">SGA</div>
+                        <span class="font-bold text-sm tracking-wide text-gray-800 font-title">SGA Neurodivergente</span>
+                    </div>
+                    <!-- Badge de Perfil Ativo -->
+                    <span id="badge-perfil-sidebar" class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full"></span>
+                </div>
+
+                <!-- Informações do Usuário Ativo -->
+                <div class="px-6 py-4 border-b border-gray-50 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-gray-600 font-bold font-title text-sm" id="avatar-usuario">
+                        U
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-800" id="nome-usuario-sidebar">Usuário Geral</h4>
+                        <p class="text-[10px] text-gray-400" id="cargo-usuario-sidebar">Monitora</p>
+                    </div>
+                </div>
+
+                <!-- Links de Navegação Dinâmicos (Filtrados por Perfil) -->
+                <nav class="p-4 space-y-1">
+                    <!-- Links ADMIN -->
+                    <div id="menu-admin" class="space-y-1 hidden">
+                        <button onclick="navegarPara('admin-dashboard')" id="btn-admin-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 bg-blue-50 text-brand-blue">
+                            <i class="fa-solid fa-chart-line w-5 text-center"></i>
+                            Dashboard Admin
+                        </button>
+                        <button onclick="navegarPara('admin-cadastro')" id="btn-admin-cadastro" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-user-plus w-5 text-center"></i>
+                            Cadastro & Protocolos
+                        </button>
+                        <button onclick="navegarPara('admin-laudos')" id="btn-admin-laudos" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-file-medical w-5 text-center"></i>
+                            Laudos e Permissões
+                        </button>
+                    </div>
+
+                    <!-- Links MONITORA -->
+                    <div id="menu-monitora" class="space-y-1 hidden">
+                        <button onclick="navegarPara('monitora-dashboard')" id="btn-monitora-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 bg-emerald-50 text-emerald-700">
+                            <i class="fa-solid fa-chalkboard-user w-5 text-center"></i>
+                            Dashboard Monitora
+                        </button>
+                        <button onclick="navegarPara('monitora-perfil')" id="btn-monitora-perfil" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-id-card-clip w-5 text-center"></i>
+                            Consultar Perfil Aluno
+                        </button>
+                        <button onclick="navegarPara('monitora-ocorrencia')" id="btn-monitora-ocorrencia" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-circle-exclamation w-5 text-center"></i>
+                            Lançar Ocorrência
+                        </button>
+                        <button onclick="navegarPara('monitora-historico')" id="btn-monitora-historico" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                            Histórico Ocorrências
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Botão de Sair no rodapé do Sidebar -->
+            <div class="p-4 border-t border-gray-100">
+                <button onclick="realizarLogout()" class="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-3 transition">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                    Sair do Sistema
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL (Dinamicamente renderizado por seções) -->
+        <main class="flex-grow p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+            
+            <!-- ALERTA GLOBAL PARA SIMULAR EVENTOS -->
+            <div id="alerta-sucesso" class="hidden transform translate-y-2 transition duration-300 bg-emerald-50 border-l-4 border-brand-green text-emerald-800 p-4 rounded-r shadow-md mb-6 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-brand-green"></i>
+                    <span id="alerta-sucesso-texto" class="text-sm font-medium">Ação realizada com sucesso!</span>
+                </div>
+                <button onclick="fecharAlerta()" class="text-emerald-500 hover:text-emerald-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+
+            <!-- SEÇÃO 1: DASHBOARD ADMINISTRADOR -->
+            <section id="sec-admin-dashboard" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 font-title">Dashboard Administrativo</h2>
+                        <p class="text-sm text-gray-500">Visão geral da governança, alunos e usuários do sistema.</p>
+                    </div>
+                    <div class="bg-blue-100 text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-brand-blue rounded-full animate-ping"></span>
+                        PostgreSQL Ativo (Simulado)
+                    </div>
+                </div>
+
+                <!-- Cards de Métricas -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-gradient fa-user-group"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title" id="card-total-alunos">0</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Alunos Atendidos</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title" id="card-total-ocorrencias">0</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Ocorrências Cifradas</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title" id="card-total-laudos">0</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Laudos Registrados</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-red-50 text-brand-red flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <span class="block text-2xl font-bold text-gray-800 font-title">2</span>
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Monitores Ativos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controle Rápido -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Atalhos rápidos -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Ações Administrativas</h3>
+                        <button onclick="navegarPara('admin-cadastro')" class="w-full bg-brand-blue hover:opacity-90 text-white p-3 rounded-lg text-xs font-semibold flex items-center justify-between transition">
+                            <span><i class="fa-solid fa-user-plus mr-2"></i> Cadastrar Aluno & Protocolo</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button onclick="navegarPara('admin-laudos')" class="w-full bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-lg text-xs font-semibold flex items-center justify-between transition">
+                            <span><i class="fa-solid fa-file-arrow-up mr-2"></i> Upload de Laudos Clínicos</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button onclick="navegarPara('admin-laudos')" class="w-full bg-brand-graySecondary hover:opacity-90 text-slate-800 p-3 rounded-lg text-xs font-semibold flex items-center justify-between transition border border-gray-300">
+                            <span><i class="fa-solid fa-user-lock mr-2"></i> Configurar Permissões</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Lista de Alunos Recentes -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2 space-y-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Alunos Cadastrados no Banco (TB04)</h3>
+                            <button onclick="navegarPara('admin-cadastro')" class="text-brand-blue text-xs font-semibold hover:underline">Ver Todos</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider text-[10px] font-bold">
+                                    <tr>
+                                        <th class="p-3">ID</th>
+                                        <th class="p-3">Nome</th>
+                                        <th class="p-3">Data Nasc.</th>
+                                        <th class="p-3">Necessidades</th>
+                                        <th class="p-3">Protocolos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-alunos-dashboard" class="divide-y divide-gray-100 text-gray-700">
+                                    <!-- Dinâmico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SEÇÃO 2: TELA DE CADASTRO DE ALUNOS E PROTOCOLOS (UC02/UC03) -->
+            <section id="sec-admin-cadastro" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Cadastro de Alunos & Protocolos Operacionais</h2>
+                    <p class="text-sm text-gray-500">Mantenha a base de dados de alunos (TB04) e anexe os planos de ação preventiva (TB05).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Formulário de Entrada -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <form onsubmit="cadastrarAlunoCompleto(event)" class="space-y-6">
+                            
+                            <!-- Bloco 1: Dados Pessoais (UC02) -->
+                            <div>
+                                <h3 class="text-xs font-bold text-brand-blue uppercase tracking-wider mb-4 border-b border-blue-50 pb-2">
+                                    <i class="fa-regular fa-id-card mr-1"></i> Dados Cadastrais do Aluno (UC02)
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Completo</label>
+                                        <input type="text" id="cad-nome" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: João da Silva Santos">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data de Nascimento</label>
+                                        <input type="date" id="cad-nasc" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Necessidades Especiais</label>
+                                        <input type="text" id="cad-necessidades" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: TEA Nível de Suporte 1, TDAH, Sensibilidade Auditiva">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Observações Gerais</label>
+                                        <textarea id="cad-obs" rows="2"
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Anotações comportamentais gerais relevantes para a escola..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bloco 2: Informações Operacionais / Protocolo (UC03) -->
+                            <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                <h3 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-4 border-b border-blue-100 pb-2 flex justify-between items-center">
+                                    <span><i class="fa-solid fa-arrows-spin mr-1"></i> Vincular Protocolo Operacional de Crise (UC03)</span>
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[9px] font-semibold">TB05 - Info Operacional</span>
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-blue-900 uppercase mb-1">Gatilho Comportamental (O que causa crises?)</label>
+                                        <input type="text" id="cad-gatilho" required
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: Excesso de ruídos (sinal da escola, gritos de crianças)">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-blue-900 uppercase mb-1">Ação Recomendada (Como a monitora deve agir?)</label>
+                                        <textarea id="cad-acao" rows="2" required
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: Entregar abafadores de som ao aluno e redirecioná-lo para a sala de recursos tranquila."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-blue-900 uppercase mb-1">Prioridade do Protocolo</label>
+                                        <select id="cad-prioridade" required
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                            <option value="Alta" class="text-red-600 font-bold">Alta Prioridade</option>
+                                            <option value="Média" class="text-amber-600">Média Prioridade</option>
+                                            <option value="Baixa" class="text-green-600">Baixa Prioridade</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botões de Ação -->
+                            <div class="flex justify-end gap-3 pt-4">
+                                <button type="reset" class="px-5 py-2 rounded text-xs font-bold text-gray-500 hover:bg-gray-100 transition">Limpar Campos</button>
+                                <button type="submit" class="bg-brand-blue hover:opacity-95 text-white px-6 py-2 rounded text-xs font-bold font-title flex items-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Salvar Registro Completo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista Lateral (Instruções e Rastreabilidade) -->
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">Rastreabilidade PI (E7/E4)</h4>
+                            <ul class="space-y-3 text-xs text-gray-600">
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-circle-nodes text-brand-blue mt-0.5"></i>
+                                    <span><strong>UC02:</strong> Realiza um <code>INSERT INTO alunos</code> com os dados pessoais do aluno.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-circle-nodes text-brand-blue mt-0.5"></i>
+                                    <span><strong>UC03:</strong> Associa o ID do aluno gerado ao protocolo na tabela <code>info_operacional</code> (FK Aluno ID).</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                                    <span><strong>Composição UML:</strong> Se o aluno for removido, todos os registros operacionais correspondentes perdem o sentido e são apagados automaticamente no Banco.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SEÇÃO 3: LAUDOS E PERMISSÕES (UC09 / UC07) -->
+            <section id="sec-admin-laudos" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Laudos Médicos & Controle de Permissões</h2>
+                    <p class="text-sm text-gray-500">Módulo administrativo para custódia de documentos clínicos (UC09) e atualização de privilégios de acessos (UC07).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Upload de Laudos Clínicos (UC09) -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start border-b border-gray-100 pb-3 mb-4">
+                                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-file-medical text-brand-blue mr-1"></i> Upload de Laudo Médico (UC09)
+                                </h3>
+                                <span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded">TB06 - laudos_medicos</span>
+                            </div>
+
+                            <form onsubmit="registrarLaudo(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Selecionar Aluno</label>
+                                    <select id="laudo-aluno-id" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="">Selecione um Aluno...</option>
+                                        <!-- Dinâmico -->
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">CRM Médico</label>
+                                        <input type="text" id="laudo-crm" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: CRM-SP 12345">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Especialidade Médica</label>
+                                        <input type="text" id="laudo-especialidade" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                            placeholder="Ex: Neuropediatra">
+                                    </div>
+                                </div>
+
+                                <!-- Área de Arrastar/Selecionar Arquivo PDF -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Arquivo PDF do Laudo</label>
+                                    <div class="border-2 border-dashed border-gray-300 hover:border-brand-blue rounded-lg p-6 text-center cursor-pointer bg-gray-50/50 transition relative">
+                                        <input type="file" id="laudo-arquivo" required accept=".pdf" onchange="mostrarArquivoSelecionado(this)"
+                                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                        <i class="fa-regular fa-file-pdf text-3xl text-gray-400 mb-2 block" id="pdf-icon-upload"></i>
+                                        <span class="block text-xs font-semibold text-gray-600" id="pdf-upload-nome">Arraste ou clique para anexar arquivo PDF</span>
+                                        <span class="text-[10px] text-gray-400 block mt-1">Apenas PDF são permitidos para armazenamento seguro no Storage</span>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded text-xs tracking-wide uppercase transition flex justify-center items-center gap-1.5">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    Processar Upload e Salvar Metadados
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Configurar Permissões de Usuários (UC07) -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start border-b border-gray-100 pb-3 mb-4">
+                                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-user-lock text-brand-blue mr-1"></i> Configurar Permissões de Usuários (UC07)
+                                </h3>
+                                <span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded">TB01/TB02 - Privilégios</span>
+                            </div>
+
+                            <form onsubmit="alterarPermissao(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Selecionar Usuário / Monitora</label>
+                                    <select id="perm-usuario" required onchange="carregarNivelAtual(this)"
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="">Selecione um usuário...</option>
+                                        <option value="Ana Silva" data-perfil="Monitora" data-nivel="1">Ana Silva (ID: #991 - Monitora)</option>
+                                        <option value="Mikael Zana" data-perfil="Admin" data-nivel="2">Mikael Zana (ID: #102 - Admin)</option>
+                                        <option value="Gabriella Céspedes" data-perfil="Admin" data-nivel="2">Gabriella Céspedes (ID: #101 - Admin)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Alterar Nível de Acesso (Perfil)</label>
+                                    <select id="perm-nivel" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="1">Nível 1 - Monitora Base (Leitura / Lançar Ocorrências)</option>
+                                        <option value="2">Nível 2 - Administrador Escolar (Acesso Total / Cadastros)</option>
+                                    </select>
+                                </div>
+
+                                <div class="bg-amber-50 border-l-4 border-brand-yellow p-3 rounded text-xs text-amber-900">
+                                    <i class="fa-solid fa-triangle-exclamation text-brand-yellow mr-1"></i>
+                                    <strong>Atenção:</strong> Alterar o nível de acesso modificará os privilégios do usuário imediatamente na próxima sessão.
+                                </div>
+
+                                <button type="submit" class="w-full bg-brand-blue hover:opacity-90 text-white font-bold py-2.5 rounded text-xs tracking-wide uppercase transition flex justify-center items-center gap-1.5">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                    Atualizar Nível de Acesso
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SEÇÃO 4: DASHBOARD MONITORA -->
+            <section id="sec-monitora-dashboard" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 font-title">Dashboard da Monitora</h2>
+                        <p class="text-sm text-gray-500">Acesso rápido aos perfis de alunos e protocolos preventivos.</p>
+                    </div>
+                    <div class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></span>
+                        Acompanhamento em Tempo Real
+                    </div>
+                </div>
+
+                <!-- Painel de Dicas / Boas-vindas Empático -->
+                <div class="bg-gradient-to-r from-teal-50 to-emerald-50 border border-emerald-100 rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Tom de Voz: Empático & Seguro</span>
+                        <h3 class="text-lg font-bold text-slate-800 font-title">Como foi sua rotina de monitoramento hoje?</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed max-w-2xl">
+                            Consulte as Regras de Manejo antes do início das aulas. Lembre-se que agir de acordo com as ações recomendadas ajuda a prevenir crises de sobrecarga sensorial.
+                        </p>
+                    </div>
+                    <button onclick="navegarPara('monitora-perfil')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded text-xs flex items-center gap-2 shadow-md shrink-0 transition">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Consultar Perfil de Aluno
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Cards de Atividades Rápidas -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Suas Ações Rápidas</h3>
+                        <button onclick="navegarPara('monitora-perfil')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg text-xs font-semibold flex items-center gap-3 transition shadow">
+                            <i class="fa-solid fa-id-card-clip text-lg"></i>
+                            <div class="text-left">
+                                <span class="block font-bold">Consultar Perfil & Manejo</span>
+                                <span class="text-[10px] opacity-80 block">Visualização rápida de gatilhos</span>
+                            </div>
+                        </button>
+                        <button onclick="navegarPara('monitora-ocorrencia')" class="w-full bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-lg text-xs font-semibold flex items-center gap-3 transition shadow">
+                            <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                            <div class="text-left">
+                                <span class="block font-bold">Lançar Ocorrência Sensível</span>
+                                <span class="text-[10px] opacity-80 block">Criptografado em tempo real</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Lista de Alunos e Protocolos Curtos -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2 space-y-4">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Seus Alunos Designados</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="cards-alunos-monitora">
+                            <!-- Dinâmico -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SEÇÃO 5: CONSULTA DE PERFIL DO ALUNO (UC04) -->
+            <section id="sec-monitora-perfil" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Consulta de Perfil do Aluno</h2>
+                    <p class="text-sm text-gray-500">Acesso instantâneo a necessidades específicas e planos preventivos (UC04).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Seleção de Aluno -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4 h-fit">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-100 pb-2">Selecionar Aluno</h3>
+                        <div class="space-y-2" id="lista-alunos-perfil-busca">
+                            <!-- Dinâmico -->
+                        </div>
+                    </div>
+
+                    <!-- Visualização do Perfil Completo (Grounded in E7 / UC04 Wireframe) -->
+                    <div class="lg:col-span-2">
+                        <!-- Estado Vazio -->
+                        <div id="perfil-vazio" class="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center text-gray-400">
+                            <i class="fa-regular fa-id-badge text-5xl mb-4 text-gray-300 block"></i>
+                            <p class="text-sm">Selecione um aluno na lista lateral para carregar seu perfil completo.</p>
+                        </div>
+
+                        <!-- Perfil Ativo -->
+                        <div id="perfil-ativo" class="hidden space-y-6">
+                            <!-- Header de Perfil -->
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-16 h-16 rounded-full bg-blue-100 text-brand-blue flex items-center justify-center text-2xl font-bold font-title" id="perfil-iniciais">
+                                        JS
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-gray-800 font-title" id="perfil-nome">João da Silva</h3>
+                                        <p class="text-xs text-gray-500 mt-0.5" id="perfil-dados-basicos">Idade: 8 anos | TEA Nível Suporte 1</p>
+                                    </div>
+                                </div>
+                                <span class="bg-blue-50 text-brand-blue text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Ativo</span>
+                            </div>
+
+                            <!-- Necessidades e Observações -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-stethoscope text-brand-blue mr-1"></i> Necessidades Especiais</h4>
+                                    <p class="text-sm font-semibold text-gray-800" id="perfil-necessidades-texto">TEA Nível de Suporte 1</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider"><i class="fa-regular fa-note-sticky text-brand-blue mr-1"></i> Observações Gerais</h4>
+                                    <p class="text-xs text-gray-600 leading-relaxed" id="perfil-obs-texto">Nenhuma observação.</p>
+                                </div>
+                            </div>
+
+                            <!-- Regras de Manejo (UC03 / TB05) - Card de Alto Destaque do E7.pdf Wireframe -->
+                            <div class="bg-gradient-to-r from-amber-50 to-amber-100 border-l-8 border-brand-yellow rounded-xl p-6 shadow-sm space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider">
+                                        <i class="fa-solid fa-triangle-exclamation text-brand-yellow mr-1"></i> Protocolo Preventivo e de Crise (Manejo)
+                                    </h4>
+                                    <span class="bg-brand-yellow/30 text-amber-900 text-[9px] font-bold px-2 py-0.5 rounded uppercase" id="perfil-prioridade-badge">Prioridade Alta</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    <div class="space-y-1">
+                                        <span class="block text-[10px] uppercase font-bold text-amber-700">Gatilho de Crise:</span>
+                                        <p class="text-sm font-semibold text-slate-800" id="perfil-gatilho">Excesso de Ruído</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <span class="block text-[10px] uppercase font-bold text-amber-700">Ação Recomendada (Imediata):</span>
+                                        <p class="text-sm font-bold text-amber-950" id="perfil-acao">Fornecer abafadores de som.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SEÇÃO 6: LANÇAR NOVA OCORRÊNCIA (UC05) -->
+            <section id="sec-monitora-ocorrencia" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Registrar Ocorrências (Criptografada)</h2>
+                    <p class="text-sm text-gray-500">Módulo de relato sensível das ocorrências cotidianas do aluno (UC05). Os fatos sensíveis serão cifrados em tempo real.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Formulário de Relato -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <form onsubmit="registrarNovaOcorrencia(event)" class="space-y-4">
+                            
+                            <!-- Nota de Segurança Visual Exigida no Wireframe E7.pdf -->
+                            <div class="bg-orange-50 border-l-4 border-orange-500 text-orange-800 p-4 rounded-r text-xs">
+                                <i class="fa-solid fa-shield-halved mr-1"></i>
+                                <strong>Nota de Segurança:</strong> A descrição dos fatos será criptografada (UC05/UC08) através de uma chave privada antes de ser salva no banco de dados para garantir a máxima privacidade do aluno.
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Aluno Alvo</label>
+                                    <select id="oc-aluno-id" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                                        <option value="">Selecione um Aluno...</option>
+                                        <!-- Dinâmico -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Intervenção Aplicada</label>
+                                    <input type="text" id="oc-intervencao" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                        placeholder="Ex: Redirecionamento de foco, Abafador auditivo">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição dos Fatos (Sensível - Criptografado)</label>
+                                    <textarea id="oc-descricao" rows="4" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                                        placeholder="Escreva detalhadamente o ocorrido..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Simulador de Processamento Criptográfico em Ação -->
+                            <div id="simulador-cripto" class="hidden bg-slate-900 text-white rounded p-4 text-xs font-mono space-y-2">
+                                <div class="flex items-center gap-2 text-emerald-400">
+                                    <i class="fa-solid fa-spinner animate-spin"></i>
+                                    <span>Iniciando CriptografiaService (AES-256)...</span>
+                                </div>
+                                <div class="text-gray-400">Texto Original: <span id="cripto-orig" class="text-white"></span></div>
+                                <div class="text-emerald-400">Cifrando Relato com Chave Privada...</div>
+                                <div class="text-amber-300 truncate">Resultado Cifrado: <span id="cripto-hash"></span></div>
+                            </div>
+
+                            <div class="flex justify-end gap-3 pt-4">
+                                <button type="reset" class="px-5 py-2 rounded text-xs font-bold text-gray-500 hover:bg-gray-100 transition">Limpar</button>
+                                <button type="submit" id="btn-salvar-ocorrencia" class="bg-brand-blue hover:opacity-95 text-white px-6 py-2.5 rounded text-xs font-bold font-title flex items-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-lock"></i>
+                                    Cifrar e Salvar Ocorrência
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lado explicativo de Segurança -->
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                            <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Criptografia em Duas Etapas</h4>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                Este sistema protege relatos sensíveis. Apenas monitores e administradores autorizados com chave válida conseguem ler os fatos no histórico. No banco, os dados são guardados como hashes e cadeias ilegíveis (conforme UC08).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SEÇÃO 7: HISTÓRICO DE OCORRÊNCIAS (UC06) -->
+            <section id="sec-monitora-historico" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 font-title">Histórico de Ocorrências</h2>
+                        <p class="text-sm text-gray-500">Listagem de ocorrências decifradas e apresentadas de forma legível após decifragem em lote (UC06).</p>
+                    </div>
+                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-key mr-1"></i> Decifrado via CriptografiaService</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <!-- Filtro por Aluno -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 h-fit">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Filtrar por Aluno</label>
+                        <select id="hist-filtro-aluno" onchange="renderizarHistoricoOcorrencias()"
+                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                            <option value="todos">Todos os Alunos</option>
+                            <!-- Dinâmico -->
+                        </select>
+                    </div>
+
+                    <!-- Lista de Ocorrências Decifradas -->
+                    <div class="lg:col-span-3 space-y-4" id="container-lista-historico">
+                        <!-- Dinâmico -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- RODAPÉ FIXO -->
+    <footer class="bg-white border-t border-gray-200 py-4 px-6 text-center text-xs text-gray-400 mt-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-2">
+            <span>Sistema de Gestão de Alunos Neurodivergentes - PI Encontro 7</span>
+            <span>Módulo de Interface & Prototipagem de Alta Fidelidade (ADS 5º Módulo)</span>
+        </div>
+    </footer>
+
+
+    <!-- LOGICA DO PROTOTIPO (SIMULADOR COMPLETO EM VANILLA JS) -->
+    <script>
+        // BANCO DE DADOS EM MEMÓRIA (Persiste no LocalStorage)
+        const SEED_ALUNOS = [
+            {
+                id: 1024,
+                nome: "João da Silva",
+                dataNascimento: "2018-05-15",
+                necessidadesEspeciais: "TEA Nível 1 - Suporte Leve",
+                observacoesGerais: "Sensibilidade a barulhos extremos. Gosta de desenhos geométricos para se acalmar.",
+                gatilho: "Excesso de ruído (Sinal da escola, gritos coletivos)",
+                acao: "Fornecer abafadores de som de forma imediata e encaminhá-lo ao espaço reservado de recursos.",
+                prioridade: "Alta"
+            },
+            {
+                id: 1025,
+                nome: "Mariana Costa",
+                dataNascimento: "2017-11-20",
+                necessidadesEspeciais: "TDAH & Sensibilidade Sensorial",
+                observacoesGerais: "Dificuldade de foco prolongado. Responde bem a estímulos visuais curtos.",
+                gatilho: "Mudanças abruptas de rotina de aula sem aviso prévio",
+                acao: "Utilizar o painel visual de rotinas antes de transições para prepará-la.",
+                prioridade: "Média"
+            }
+        ];
+
+        const SEED_OCORRENCIAS = [
+            {
+                id: 1,
+                alunoId: 1024,
+                alunoNome: "João da Silva",
+                monitoraNome: "Ana Silva",
+                dataHora: "2026-05-13T14:30:00",
+                intervencao: "Retirada da sala",
+                descricaoCifrada: "U2FsdGVkX19r9m9fS8+Vv9QvH7WlD1p2Z8s9df+a8= (Fatos: Aluno apresentou agitação motora intensa após mudança inesperada na rotina da aula de artes. Aplicado protocolo de isolamento acústico.)"
+            },
+            {
+                id: 2,
+                alunoId: 1024,
+                alunoNome: "João da Silva",
+                monitoraNome: "Ana Silva",
+                dataHora: "2026-05-02T09:15:00",
+                intervencao: "Contenção verbal",
+                descricaoCifrada: "U2FsdGVkX18mNzk4Y3g4Zjk4MmRzOGZzOWRmODk= (Fatos: Recusa em participar da atividade em grupo. Redirecionado para atividade individual com sucesso após 10 minutos.)"
+            }
+        ];
+
+        // INICIALIZAÇÃO DE DADOS
+        if (!localStorage.getItem('SGA_alunos')) {
+            localStorage.setItem('SGA_alunos', JSON.stringify(SEED_ALUNOS));
+        }
+        if (!localStorage.getItem('SGA_ocorrencias')) {
+            localStorage.setItem('SGA_ocorrencias', JSON.stringify(SEED_OCORRENCIAS));
+        }
+        if (!localStorage.getItem('SGA_laudos_count')) {
+            localStorage.setItem('SGA_laudos_count', "0");
+        }
+
+        // ESTADOS DE SESSÃO ATIVA
+        let usuarioAtivo = null;
+        let secaoAtiva = 'admin-dashboard';
+
+        // FUNÇÃO DE LOGIN
+        function realizarLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            const erroDiv = document.getElementById('login-erro');
+
+            if (email === 'admin@instituicao.edu.br' && senha === 'admin123') {
+                usuarioAtivo = {
+                    nome: "Gabriella Céspedes (Admin)",
+                    cargo: "Administrador",
+                    perfil: "Admin",
+                    avatar: "GC"
+                };
+                loginSucesso('admin-dashboard');
+            } else if (email === 'monitora@instituicao.edu.br' && senha === 'monitora123') {
+                usuarioAtivo = {
+                    nome: "Ana Silva",
+                    cargo: "Monitora Operacional",
+                    perfil: "Monitora",
+                    avatar: "AS"
+                };
+                loginSucesso('monitora-dashboard');
+            } else {
+                erroDiv.classList.remove('hidden');
+            }
+        }
+
+        function preencherCredenciais(perfil) {
+            if (perfil === 'admin') {
+                document.getElementById('login-email').value = 'admin@instituicao.edu.br';
+                document.getElementById('login-senha').value = 'admin123';
+            } else {
+                document.getElementById('login-email').value = 'monitora@instituicao.edu.br';
+                document.getElementById('login-senha').value = 'monitora123';
+            }
+        }
+
+        function loginSucesso(destino) {
+            document.getElementById('tela-login').classList.add('hidden');
+            document.getElementById('sistema-dashboard').classList.remove('hidden');
+            document.getElementById('login-erro').classList.add('hidden');
+            
+            // Sidebar dinâmico
+            document.getElementById('nome-usuario-sidebar').innerText = usuarioAtivo.nome;
+            document.getElementById('cargo-usuario-sidebar').innerText = usuarioAtivo.cargo;
+            document.getElementById('avatar-usuario').innerText = usuarioAtivo.avatar;
+            
+            const badge = document.getElementById('badge-perfil-sidebar');
+            badge.innerText = usuarioAtivo.perfil;
+            if (usuarioAtivo.perfil === 'Admin') {
+                badge.className = "text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-brand-blue";
+                document.getElementById('menu-admin').classList.remove('hidden');
+                document.getElementById('menu-monitora').classList.add('hidden');
+            } else {
+                badge.className = "text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700";
+                document.getElementById('menu-admin').classList.add('hidden');
+                document.getElementById('menu-monitora').classList.remove('hidden');
+            }
+
+            // Carregar e Renderizar dados das tabelas
+            sincronizarDados();
+            navegarPara(destino);
+        }
+
+        function realizarLogout() {
+            usuarioAtivo = null;
+            document.getElementById('tela-login').classList.remove('hidden');
+            document.getElementById('sistema-dashboard').classList.add('hidden');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-senha').value = '';
+        }
+
+        // SIMULADOR RÁPIDO DE MODO (Para facilitar a correção da banca do PI)
+        function simularPerfil(perfil) {
+            if (perfil === 'login') {
+                realizarLogout();
+            } else if (perfil === 'admin') {
+                usuarioAtivo = {
+                    nome: "Gabriella Céspedes (Admin)",
+                    cargo: "Administrador",
+                    perfil: "Admin",
+                    avatar: "GC"
+                };
+                loginSucesso('admin-dashboard');
+            } else if (perfil === 'monitora') {
+                usuarioAtivo = {
+                    nome: "Ana Silva",
+                    cargo: "Monitora Operacional",
+                    perfil: "Monitora",
+                    avatar: "AS"
+                };
+                loginSucesso('monitora-dashboard');
+            }
+        }
+
+        // NAVEGAÇÃO DE TELA (SPA)
+        function navegarPara(secaoId) {
+            secaoAtiva = secaoId;
+            const secoes = [
+                'sec-admin-dashboard', 'sec-admin-cadastro', 'sec-admin-laudos',
+                'sec-monitora-dashboard', 'sec-monitora-perfil', 'sec-monitora-ocorrencia', 'sec-monitora-historico'
+            ];
+            
+            secoes.forEach(sec => {
+                const el = document.getElementById(sec);
+                if (sec === `sec-${secaoId}`) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Atualização de Estados do Menu Lateral
+            const todosBotoes = document.querySelectorAll('aside nav button');
+            todosBotoes.forEach(btn => {
+                btn.className = "w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900";
+            });
+
+            const activeBtn = document.getElementById(`btn-${secaoId}`);
+            if (activeBtn) {
+                if (usuarioAtivo.perfil === 'Admin') {
+                    activeBtn.className = "w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 bg-blue-50 text-brand-blue";
+                } else {
+                    activeBtn.className = "w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 bg-emerald-50 text-emerald-700";
+                }
+            }
+        }
+
+        // SINCRONIZAR E ATUALIZAR VIEWS
+        function sincronizarDados() {
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const ocorrencias = JSON.parse(localStorage.getItem('SGA_ocorrencias'));
+            const laudosCount = parseInt(localStorage.getItem('SGA_laudos_count'));
+
+            // Métricas
+            document.getElementById('card-total-alunos').innerText = alunos.length;
+            document.getElementById('card-total-ocorrencias').innerText = ocorrencias.length;
+            document.getElementById('card-total-laudos').innerText = laudosCount;
+
+            // Renderizar Tabelas & Dropdowns
+            renderizarTabelaAlunosAdmin();
+            renderizarDropdownsAlunos();
+            renderizarCardsAlunosMonitora();
+            renderizarListaBuscaPerfilMonitora();
+            renderizarHistoricoOcorrencias();
+        }
+
+        // RENDERS DINÂMICOS
+        function renderizarTabelaAlunosAdmin() {
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const tbody = document.getElementById('tabela-alunos-dashboard');
+            tbody.innerHTML = '';
+
+            alunos.forEach(aluno => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-gray-400">#${aluno.id}</td>
+                    <td class="p-3 font-semibold text-gray-800">${aluno.nome}</td>
+                    <td class="p-3 text-gray-500">${formatarData(aluno.dataNascimento)}</td>
+                    <td class="p-3 text-gray-600"><span class="bg-blue-50 text-brand-blue px-2 py-0.5 rounded text-[10px] font-medium">${aluno.necessidadesEspeciais}</span></td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${aluno.prioridade === 'Alta' ? 'bg-red-50 text-brand-red' : 'bg-amber-50 text-amber-700'}">
+                            Gatilho: ${aluno.gatilho ? aluno.gatilho : 'Não vinculado'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarDropdownsAlunos() {
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const laudosSelect = document.getElementById('laudo-aluno-id');
+            const ocorrenciasSelect = document.getElementById('oc-aluno-id');
+            const historicoSelect = document.getElementById('hist-filtro-aluno');
+
+            // Limpar
+            laudosSelect.innerHTML = '<option value="">Selecione um Aluno...</option>';
+            ocorrenciasSelect.innerHTML = '<option value="">Selecione um Aluno...</option>';
+            historicoSelect.innerHTML = '<option value="todos">Todos os Alunos</option>';
+
+            alunos.forEach(aluno => {
+                const option = `<option value="${aluno.id}">${aluno.nome} (ID: #${aluno.id})</option>`;
+                laudosSelect.innerHTML += option;
+                ocorrenciasSelect.innerHTML += option;
+                historicoSelect.innerHTML += option;
+            });
+        }
+
+        function renderizarCardsAlunosMonitora() {
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const container = document.getElementById('cards-alunos-monitora');
+            container.innerHTML = '';
+
+            alunos.forEach(aluno => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-lg border border-gray-150 shadow-sm hover:shadow-md transition space-y-3 cursor-pointer";
+                card.onclick = () => {
+                    carregarPerfilAluno(aluno.id);
+                };
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-xs font-bold text-gray-800">${aluno.nome}</h4>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded uppercase ${aluno.prioridade === 'Alta' ? 'bg-red-50 text-brand-red' : 'bg-amber-50 text-amber-700'}">${aluno.prioridade}</span>
+                    </div>
+                    <div class="text-[11px] text-gray-500">
+                        <span class="block"><strong>Necessidade:</strong> ${aluno.necessidadesEspeciais}</span>
+                        <span class="block mt-1 truncate"><strong>Gatilho:</strong> <span class="text-amber-700 font-medium">${aluno.gatilho}</span></span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderizarListaBuscaPerfilMonitora() {
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const container = document.getElementById('lista-alunos-perfil-busca');
+            container.innerHTML = '';
+
+            alunos.forEach(aluno => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-lg text-xs font-medium border border-gray-100 hover:bg-gray-50 transition flex justify-between items-center bg-white";
+                btn.onclick = () => {
+                    carregarPerfilAluno(aluno.id);
+                };
+                btn.innerHTML = `
+                    <span>${aluno.nome}</span>
+                    <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function carregarPerfilAluno(id) {
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const aluno = alunos.find(a => a.id == id);
+            
+            if (aluno) {
+                document.getElementById('perfil-vazio').classList.add('hidden');
+                const ativoDiv = document.getElementById('perfil-ativo');
+                ativoDiv.classList.remove('hidden');
+
+                document.getElementById('perfil-iniciais').innerText = aluno.nome.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('perfil-nome').innerText = aluno.nome;
+                
+                const idade = calcularIdade(aluno.dataNascimento);
+                document.getElementById('perfil-dados-basicos').innerText = `ID: #${aluno.id} | Idade: ${idade} anos | ${aluno.necessidadesEspeciais}`;
+                
+                document.getElementById('perfil-necessidades-texto').innerText = aluno.necessidadesEspeciais;
+                document.getElementById('perfil-obs-texto').innerText = aluno.observacoesGerais || "Nenhuma observação cadastrada.";
+                
+                document.getElementById('perfil-gatilho').innerText = aluno.gatilho;
+                document.getElementById('perfil-acao').innerText = aluno.acao;
+
+                const priBadge = document.getElementById('perfil-prioridade-badge');
+                priBadge.innerText = `Prioridade ${aluno.prioridade}`;
+                if (aluno.prioridade === 'Alta') {
+                    priBadge.className = "bg-brand-red text-white text-[9px] font-bold px-2.5 py-0.5 rounded uppercase";
+                } else {
+                    priBadge.className = "bg-brand-yellow text-slate-800 text-[9px] font-bold px-2.5 py-0.5 rounded uppercase";
+                }
+
+                navegarPara('monitora-perfil');
+            }
+        }
+
+        function renderizarHistoricoOcorrencias() {
+            const ocorrencias = JSON.parse(localStorage.getItem('SGA_ocorrencias'));
+            const container = document.getElementById('container-lista-historico');
+            const filtro = document.getElementById('hist-filtro-aluno').value;
+
+            container.innerHTML = '';
+            
+            const ocorrenciasFiltradas = filtro === 'todos' 
+                ? ocorrencias 
+                : ocorrencias.filter(o => o.alunoId == filtro);
+
+            if (ocorrenciasFiltradas.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-400">
+                        Nenhuma ocorrência registrada para este aluno.
+                    </div>
+                `;
+                return;
+            }
+
+            // Exibir em ordem reversa (mais recentes primeiro)
+            ocorrenciasFiltradas.slice().reverse().forEach(oc => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4 relative overflow-hidden";
+                
+                // Texto Claro decifrado do texto fictício criptografado
+                const relatoClaro = decifrarTextoFicticio(oc.descricaoCifrada);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-gray-100 pb-3">
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Aluno: <span class="text-brand-blue">${oc.alunoNome} (ID: #${oc.alunoId})</span></span>
+                            <span class="text-[10px] text-gray-400 mt-1 block"><i class="fa-regular fa-clock"></i> Registrado em: ${formatarDataHora(oc.dataHora)}</span>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded border border-emerald-150 flex items-center gap-1">
+                            <i class="fa-solid fa-lock-open text-[9px]"></i> Decifrado via CriptografiaService
+                        </span>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <p class="text-gray-500"><strong>Intervenção imediata:</strong> <span class="text-gray-800 font-medium">${oc.intervencao}</span></p>
+                        <p class="text-gray-700 leading-relaxed bg-slate-50 p-3 rounded border border-slate-100">
+                            <strong>Fatos relatados:</strong> ${relatoClaro}
+                        </p>
+                    </div>
+                    <div class="text-[10px] text-gray-400 flex justify-end gap-1.5 items-center">
+                        <i class="fa-regular fa-user"></i> Autor do relato: <strong class="text-gray-600">${oc.monitoraNome}</strong>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+
+        // AÇÕES DO FORMULÁRIO (Simulação de persistência)
+        function cadastrarAlunoCompleto(event) {
+            event.preventDefault();
+            
+            const nome = document.getElementById('cad-nome').value;
+            const dataNascimento = document.getElementById('cad-nasc').value;
+            const necessidadesEspeciais = document.getElementById('cad-necessidades').value;
+            const observacoesGerais = document.getElementById('cad-obs').value;
+            
+            const gatilho = document.getElementById('cad-gatilho').value;
+            const acao = document.getElementById('cad-acao').value;
+            const prioridade = document.getElementById('cad-prioridade').value;
+
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            
+            // Gerar id incremental simples maior que 1025
+            const maiorId = alunos.reduce((max, a) => a.id > max ? a.id : max, 1025);
+            const novoId = maiorId + 1;
+
+            const novoAluno = {
+                id: novoId,
+                nome,
+                dataNascimento,
+                necessidadesEspeciais,
+                observacoesGerais,
+                gatilho,
+                acao,
+                prioridade
+            };
+
+            alunos.push(novoAluno);
+            localStorage.setItem('SGA_alunos', JSON.stringify(alunos));
+            
+            event.target.reset();
+            sincronizarDados();
+            mostrarAlertaSucesso(`Cadastro realizado com sucesso! Aluno #${novoId} inserido no Banco PostgreSQL.`);
+            navegarPara('admin-dashboard');
+        }
+
+        function registrarLaudo(event) {
+            event.preventDefault();
+            const count = parseInt(localStorage.getItem('SGA_laudos_count'));
+            localStorage.setItem('SGA_laudos_count', (count + 1).toString());
+            
+            event.target.reset();
+            document.getElementById('pdf-upload-nome').innerText = "Arraste ou clique para anexar arquivo PDF";
+            document.getElementById('pdf-icon-upload').className = "fa-regular fa-file-pdf text-3xl text-gray-400 mb-2 block";
+            
+            sincronizarDados();
+            mostrarAlertaSucesso("Laudo registrado com sucesso! PDF armazenado no Storage seguro.");
+        }
+
+        function registrarNovaOcorrencia(event) {
+            event.preventDefault();
+            
+            const AlunoId = document.getElementById('oc-aluno-id').value;
+            const intervencao = document.getElementById('oc-intervencao').value;
+            const fatosTxt = document.getElementById('oc-descricao').value;
+
+            if (!AlunoId) return;
+
+            const alunos = JSON.parse(localStorage.getItem('SGA_alunos'));
+            const ocorrencias = JSON.parse(localStorage.getItem('SGA_ocorrencias'));
+            
+            const aluno = alunos.find(a => a.id == AlunoId);
+
+            // Simular CriptografiaService na Tela (Spinning loading)
+            const simulador = document.getElementById('simulador-cripto');
+            document.getElementById('cripto-orig').innerText = fatosTxt;
+            document.getElementById('cripto-hash').innerText = "Processando algoritmo AES-256...";
+            simulador.classList.remove('hidden');
+            
+            const btn = document.getElementById('btn-salvar-ocorrencia');
+            btn.disabled = true;
+            btn.opacity = "0.7";
+
+            setTimeout(() => {
+                const hashGerado = btoa(fatosTxt).substring(0, 32) + "...[AES-256-SECURE]";
+                document.getElementById('cripto-hash').innerText = hashGerado;
+
+                setTimeout(() => {
+                    // Salvar
+                    const novaOc = {
+                        id: ocorrencias.length + 1,
+                        alunoId: AlunoId,
+                        alunoNome: aluno.nome,
+                        monitoraNome: usuarioAtivo.nome,
+                        dataHora: new Date().toISOString(),
+                        intervencao,
+                        descricaoCifrada: `U2FsdGVkX19... (Fatos: ${fatosTxt})`
+                    };
+
+                    ocorrencias.push(novaOc);
+                    localStorage.setItem('SGA_ocorrencias', JSON.stringify(ocorrencias));
+
+                    // Resetar tela
+                    simulador.classList.add('hidden');
+                    btn.disabled = false;
+                    btn.opacity = "1";
+                    event.target.reset();
+                    
+                    sincronizarDados();
+                    mostrarAlertaSucesso("Relato sensível criptografado e salvo com sucesso!");
+                    navegarPara('monitora-dashboard');
+                }, 1000);
+            }, 1000);
+        }
+
+        function alterarPermissao(event) {
+            event.preventDefault();
+            const usuario = document.getElementById('perm-usuario').value;
+            const nivel = document.getElementById('perm-nivel').value;
+            
+            mostrarAlertaSucesso(`Permissões atualizadas para ${usuario}. Nível configurado para: Nível ${nivel}.`);
+            event.target.reset();
+        }
+
+        function carregarNivelAtual(select) {
+            const selectedOpt = select.options[select.selectedIndex];
+            if (selectedOpt && selectedOpt.value) {
+                const nivel = selectedOpt.getAttribute('data-nivel');
+                document.getElementById('perm-nivel').value = nivel;
+            }
+        }
+
+
+        // AUXILIARES
+        function formatarData(dataStr) {
+            if (!dataStr) return "-";
+            const parts = dataStr.split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function formatarDataHora(dataHoraStr) {
+            const dt = new Date(dataHoraStr);
+            return dt.toLocaleString('pt-BR');
+        }
+
+        function calcularIdade(dataNasc) {
+            const hoje = new Date();
+            const nasc = new Date(dataNasc);
+            let idade = hoje.getFullYear() - nasc.getFullYear();
+            const m = hoje.getMonth() - nasc.getMonth();
+            if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+                idade--;
+            }
+            return idade;
+        }
+
+        function decifrarTextoFicticio(str) {
+            // Extrai o conteúdo dentro de (Fatos: ...) para simular a decodificação da CriptografiaService
+            const regex = /\(Fatos: (.*?)\)/;
+            const match = str.match(regex);
+            if (match && match[1]) {
+                return match[1];
+            }
+            return str;
+        }
+
+        function mostrarArquivoSelecionado(input) {
+            const nameSpan = document.getElementById('pdf-upload-nome');
+            const icon = document.getElementById('pdf-icon-upload');
+            if (input.files && input.files[0]) {
+                nameSpan.innerText = `Anexado: ${input.files[0].name} (${(input.files[0].size/1024).toFixed(1)} KB)`;
+                icon.className = "fa-solid fa-file-pdf text-3xl text-emerald-500 mb-2 block";
+            }
+        }
+
+        function mostrarAlertaSucesso(texto) {
+            const alert = document.getElementById('alerta-sucesso');
+            document.getElementById('alerta-sucesso-texto').innerText = texto;
+            alert.classList.remove('hidden');
+            setTimeout(() => {
+                fecharAlerta();
+            }, 6000);
+        }
+
+        function fecharAlerta() {
+            document.getElementById('alerta-sucesso').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
