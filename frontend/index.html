@@ -18,19 +18,6 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- SIMULADOR DE PERFIL (Para trocar de visualização rapidamente sem deslogar) -->
-    <div class="bg-slate-900 text-white text-xs px-4 py-2 flex justify-between items-center z-50">
-        <div>
-            <span class="font-bold text-amber-400"><i class="fa-solid class fa-circle-info mr-1"></i> MODO DE SIMULAÇÃO:</span>
-            Você pode alternar os perfis ou simular as ações do sistema.
-        </div>
-        <!-- <div class="flex gap-2">
-            <button onclick="simularPerfil('login')" class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-[10px]">Ir para Login</button>
-            <button onclick="simularPerfil('admin')" class="bg-brand-blue hover:opacity-90 px-2 py-1 rounded text-[10px] font-semibold">Perfil Admin</button>
-            <button onclick="simularPerfil('monitora')" class="bg-emerald-600 hover:opacity-90 px-2 py-1 rounded text-[10px] font-semibold">Perfil Monitora</button>
-        </div> -->
-    </div>
-
     <!-- TELA DE LOGIN (Nível 0) -->
     <div id="tela-login" class="flex-grow flex relative overflow-hidden gradient-brand-bg">
         <!-- Coluna Visual / Gradiente Orgânico -->
@@ -187,6 +174,14 @@
                             <i class="fa-solid fa-file-medical w-5 text-center"></i>
                             Laudos e Permissões
                         </button>
+                        <button onclick="navegarPara('admin-monitoras')" id="btn-admin-monitoras" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-user-group w-5 text-center"></i>
+                            Gerenciar Monitoras
+                        </button>
+                        <button onclick="navegarPara('admin-ocorrencias')" id="btn-admin-ocorrencias" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                            <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
+                            Todas as Ocorrências
+                        </button>
                     </div>
 
                     <!-- Links MONITORA -->
@@ -223,7 +218,7 @@
         <!-- CONTEÚDO PRINCIPAL (Dinamicamente renderizado por seções) -->
         <main class="flex-grow p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
             
-            <!-- ALERTA GLOBAL PARA SIMULAR EVENTOS -->
+            <!-- ALERTA GLOBAL DE FEEDBACK DE AÇÕES -->
             <div id="alerta-sucesso" class="hidden transform translate-y-2 transition duration-300 bg-emerald-50 border-l-4 border-brand-green text-emerald-800 p-4 rounded-r shadow-md mb-6 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-circle-check text-brand-green"></i>
@@ -243,7 +238,7 @@
                     </div>
                     <div class="bg-blue-100 text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
                         <span class="w-2 h-2 bg-brand-blue rounded-full animate-ping"></span>
-                        PostgreSQL Ativo (Simulado)
+                        PostgreSQL Ativo
                     </div>
                 </div>
 
@@ -725,17 +720,6 @@
                                 </div>
                             </div>
 
-                            <!-- Simulador de Processamento Criptográfico em Ação -->
-                            <div id="simulador-cripto" class="hidden bg-slate-900 text-white rounded p-4 text-xs font-mono space-y-2">
-                                <div class="flex items-center gap-2 text-emerald-400">
-                                    <i class="fa-solid fa-spinner animate-spin"></i>
-                                    <span>Iniciando CriptografiaService (AES-256)...</span>
-                                </div>
-                                <div class="text-gray-400">Texto Original: <span id="cripto-orig" class="text-white"></span></div>
-                                <div class="text-emerald-400">Cifrando Relato com Chave Privada...</div>
-                                <div class="text-amber-300 truncate">Resultado Cifrado: <span id="cripto-hash"></span></div>
-                            </div>
-
                             <div class="flex justify-end gap-3 pt-4">
                                 <button type="reset" class="px-5 py-2 rounded text-xs font-bold text-gray-500 hover:bg-gray-100 transition">Limpar</button>
                                 <button type="submit" id="btn-salvar-ocorrencia" class="bg-brand-blue hover:opacity-95 text-white px-6 py-2.5 rounded text-xs font-bold font-title flex items-center gap-1.5 shadow-md">
@@ -786,6 +770,85 @@
                 </div>
             </section>
 
+            <!-- SEÇÃO 8: GERENCIAR MONITORAS (CRUD de equipe + vínculos) -->
+            <section id="sec-admin-monitoras" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Gerenciar Monitoras</h2>
+                    <p class="text-sm text-gray-500">Cadastro de contas de monitoras, edição, remoção e vínculo com alunos.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Formulário de criação -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 h-fit">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-100 pb-2 mb-4">Nova Monitora</h3>
+                        <form onsubmit="criarMonitora(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Login (e-mail)</label>
+                                <input type="email" id="mon-login" required class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" placeholder="monitora@escola.edu.br">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Senha inicial</label>
+                                <input type="text" id="mon-senha" required minlength="6" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" placeholder="mín. 6 caracteres">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">CPF</label>
+                                <input type="text" id="mon-cpf" required class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" placeholder="000.000.000-00">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Turmas</label>
+                                <input type="text" id="mon-classes" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue" placeholder="Ex: Turma 3A, 4B">
+                            </div>
+                            <button type="submit" class="w-full bg-brand-blue hover:opacity-90 text-white font-bold py-2.5 rounded text-xs uppercase transition flex justify-center items-center gap-1.5">
+                                <i class="fa-solid fa-user-plus"></i> Cadastrar Monitora
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Lista de monitoras -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-100 pb-2 mb-4">Monitoras Cadastradas</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider text-[10px] font-bold">
+                                    <tr><th class="p-3">Login</th><th class="p-3">Turmas</th><th class="p-3">Alunos</th><th class="p-3 text-right">Ações</th></tr>
+                                </thead>
+                                <tbody id="tabela-monitoras" class="divide-y divide-gray-100 text-gray-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de vínculos (preenchido ao clicar em "Alunos" de uma monitora) -->
+                <div id="painel-vinculos" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                        <h3 class="text-sm font-bold text-gray-700">Vincular alunos — <span id="vinc-monitora-nome" class="text-brand-blue"></span></h3>
+                        <button onclick="fecharVinculos()" class="text-gray-400 hover:text-gray-700 text-xs"><i class="fa-solid fa-xmark"></i> Fechar</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-2">Adicionar aluno</label>
+                            <div class="flex gap-2">
+                                <select id="vinc-aluno-select" class="flex-grow px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm"></select>
+                                <button onclick="vincularAlunoMonitora()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 rounded text-xs font-bold"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-2">Alunos vinculados</label>
+                            <div id="vinc-lista" class="space-y-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 9: TODAS AS OCORRÊNCIAS (visão admin) -->
+            <section id="sec-admin-ocorrencias" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 font-title">Todas as Ocorrências</h2>
+                    <p class="text-sm text-gray-500">Visão administrativa de tudo que as monitoras registram, com edição e remoção.</p>
+                </div>
+                <div id="container-ocorrencias-admin" class="space-y-4"></div>
+            </section>
+
         </main>
     </div>
 
@@ -798,5 +861,23 @@
             <a href="" class="text-brand-blue hover:underline"><i class="fa-brands fa-square-instagram"></i></a>
         </div>
     </footer>
+    <!-- MODAL GENÉRICO (confirmação / formulário) -->
+    <div id="sga-modal-overlay" class="hidden fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
+        <div id="sga-modal" class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+                <span id="sga-modal-icone" class="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0"></span>
+                <h3 id="sga-modal-titulo" class="text-sm font-bold text-gray-800 font-title">Título</h3>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <p id="sga-modal-texto" class="text-sm text-gray-600"></p>
+                <div id="sga-modal-campos" class="space-y-3"></div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+                <button id="sga-modal-cancelar" type="button" class="px-4 py-2 rounded text-xs font-bold text-gray-500 hover:bg-gray-100 transition">Cancelar</button>
+                <button id="sga-modal-confirmar" type="button" class="px-5 py-2 rounded text-xs font-bold text-white font-title transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
