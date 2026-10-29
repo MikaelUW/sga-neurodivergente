@@ -13,13 +13,21 @@ class AlunoSeeder extends Seeder
 {
     public function run(): void
     {
+        // Idempotente: se já houver aluno cadastrado, não duplica os dados
+        // de demonstração (permite reboot automático sem erro de unique).
+        if (Aluno::query()->exists()) {
+            return;
+        }
+
         // Criar Responsável Legal
-        $responsavel = Responsavel::create([
-            'nome' => 'Maria da Silva',
-            'cpf' => '123.456.789-00',
-            'email' => 'maria.silva@exemplo.com',
-            'telefone' => '(11) 99999-8888',
-        ]);
+        $responsavel = Responsavel::firstOrCreate(
+            ['cpf' => '123.456.789-00'],
+            [
+                'nome' => 'Maria da Silva',
+                'email' => 'maria.silva@exemplo.com',
+                'telefone' => '(11) 99999-8888',
+            ]
+        );
 
         // Criar Aluno de Teste com dados criptografados automaticamente e consentimento LGPD
         $aluno = Aluno::create([
