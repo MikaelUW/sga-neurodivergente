@@ -1,0 +1,4 @@
+# NUNCA versionar certificados ou chaves privadas.
+*
+!.gitignore
+!README.md

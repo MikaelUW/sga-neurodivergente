@@ -1,0 +1,42 @@
+# =====================================================================
+#  Override de PRODUÇÃO — terminação TLS no nginx.
+#
+#  Uso:
+#    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+#  Pré-requisitos:
+#    - .env de produção (APP_ENV=production, APP_KEY e BLIND_INDEX_KEY fixas,
+#      DB_PASSWORD forte) — ver .env.production.example.
+#    - Certificados TLS em ./docker/nginx/certs/{fullchain.pem,privkey.pem}.
+#      Em dev/homologação, gere um autoassinado (ver README de produção).
+#    - NÃO publicar a porta do banco (não defina DB_PUBLISH_PORT).
+#
+#  Observação: este arquivo NÃO deve ser usado junto do
+#  docker-compose.override.yml (que é o perfil de desenvolvimento).
+#  O compose só aplica o override automaticamente; aqui passamos os
+#  arquivos explicitamente com -f, então o override de dev é ignorado.
+# =====================================================================
+
+services:
+  web:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/certs:/etc/nginx/certs:ro
+      - sgan_storage:/var/www/storage/app:ro
+
+  db:
+    # Backups persistidos em volume nomeado dedicado.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - sgan_backups:/backups
+      - ./docker/backup.sh:/backups/backup.sh:ro
+      - ./docker/restore.sh:/backups/restore.sh:ro
+    environment:
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS:-14}"
+
+volumes:
+  sgan_backups:
+    driver: local
