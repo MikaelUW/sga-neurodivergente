@@ -57,7 +57,7 @@
                 </div>
 
                 <div id="login-erro" class="hidden bg-red-50 border-l-4 border-brand-red text-brand-red p-3 rounded mb-4 text-xs font-medium">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciais inválidas. Use os exemplos de teste abaixo.
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciais inválidas. Verifique o e-mail e a senha.
                 </div>
 
                 <form onsubmit="realizarLogin(event)" class="space-y-5">
@@ -104,23 +104,6 @@
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </form>
-
-                <!-- Dica rápida de teste -->
-                <div class="mt-8 pt-6 border-t border-gray-100">
-                    <span class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Credenciais de Teste:</span>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="preencherCredenciais('admin')" class="text-left bg-blue-50 hover:bg-blue-100 p-2 rounded text-[11px] border border-blue-200 transition-colors">
-                            <span class="font-bold text-brand-blue block">Administrador:</span>
-                            <span class="text-gray-600 block">admin@instituicao.edu.br</span>
-                            <span class="text-gray-400">Senha: admin123</span>
-                        </button>
-                        <button onclick="preencherCredenciais('monitora')" class="text-left bg-emerald-50 hover:bg-emerald-100 p-2 rounded text-[11px] border border-emerald-200 transition-colors">
-                            <span class="font-bold text-emerald-700 block">Monitora:</span>
-                            <span class="text-gray-600 block">monitora@instituicao.edu.br</span>
-                            <span class="text-gray-400">Senha: monitora123</span>
-                        </button>
-                    </div>
-                </div>
 
                 <div class="mt-6 text-center">
                     <a href="#" class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-blue hover:underline">

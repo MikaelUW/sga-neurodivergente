@@ -146,16 +146,6 @@ function alternarVisibilidadeSenha(botao) {
     icone.classList.toggle('fa-eye-slash', !visivel);
 }
 
-function preencherCredenciais(perfil) {
-    if (perfil === 'admin') {
-        document.getElementById('login-email').value = 'admin@escola.edu.br';
-        document.getElementById('login-senha').value = 'admin123';
-    } else {
-        document.getElementById('login-email').value = 'monitora@escola.edu.br';
-        document.getElementById('login-senha').value = 'monitora123';
-    }
-}
-
 async function loginSucesso(destino) {
     document.getElementById('tela-login').classList.add('hidden');
     document.getElementById('sistema-dashboard').classList.remove('hidden');
