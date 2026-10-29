@@ -62,12 +62,24 @@ sga-neurodivergente/
 
 ```bash
 cd backend
+# 1) Crie o .env e gere a APP_KEY (uma única vez)
+cp .env.example .env
+docker compose run --rm app php artisan key:generate --show
+#   copie o valor para APP_KEY= no arquivo .env
+
+# 2) Suba o ambiente
 docker compose up -d --build
 ```
 
-O `entrypoint.sh` cuida automaticamente de: `composer install`, geração da `APP_KEY`, espera do PostgreSQL, `migrate`, `db:seed` e `storage:link`.
+O `entrypoint.sh` valida a `APP_KEY`, espera o PostgreSQL (com timeout), roda `migrate` e, **fora de produção**, `db:seed`. A API fica em **http://localhost:8000** (porta ajustável via `APP_PORT`).
 
-A API ficará disponível em **http://localhost:8000**.
+> **APP_KEY é crítica:** ela cifra os dados sensíveis. Mantenha-a fixa e inclua-a no backup. Trocá-la torna os dados existentes ilegíveis. O entrypoint **não** regenera a chave automaticamente.
+
+**Produção:** use `cp .env.production.example .env`, preencha os segredos e suba só o arquivo base (sem o override de dev):
+
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
 
 ### 2. Front-end
 
@@ -96,16 +108,40 @@ Dados sensíveis dos alunos (nome, necessidades especiais, ocorrências e planos
 | Administrador | `admin@escola.edu.br` | `admin123` |
 | Monitora | `monitora@escola.edu.br` | `monitora123` |
 
+> Os seeders só rodam fora de produção. Em produção, crie o primeiro administrador manualmente com senha forte.
+
 ---
 
 ## 🧪 Testes
+
+**Backend (PHPUnit)** — roda em SQLite em memória, sem tocar no banco real:
 
 ```bash
 cd backend
 docker compose exec app php artisan test
 ```
 
-A suíte cobre autenticação, cadastro de alunos, manejo operacional, ocorrências criptografadas, upload/download de laudos em PDF e gestão de permissões.
+A suíte (29 testes) cobre autenticação, cadastro de alunos, manejo operacional, ocorrências criptografadas, upload/download de laudos em PDF, gestão de permissões, blind index de busca, paginação e trilha de auditoria LGPD.
+
+**Frontend (E2E com Playwright)** — exige a API no ar (`docker compose up` no backend):
+
+```bash
+cd frontend
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
+
+Os 7 testes E2E exercitam as telas reais contra a API: login (admin/monitora), login inválido, logout, dashboard com dados reais, cadastro de aluno + protocolo e registro/consulta de ocorrência criptografada.
+
+## 🖥️ Front-end (desenvolvimento)
+
+```bash
+cd frontend
+npm run serve   # serve em http://localhost:5500
+```
+
+O front consome a API em `http://localhost:8000/api` (ajustável definindo `window.SGA_API_BASE`). O login usa token Sanctum (Bearer), armazenado no `localStorage`.
 
 ---
 
