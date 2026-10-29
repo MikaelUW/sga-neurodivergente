@@ -38,8 +38,8 @@ class LgpdAdequacaoTest extends TestCase
         ]);
         Administrador::create([
             'user_id' => $this->adminUser->id,
-            'cargo' => 'Diretor',
-            'cpf' => '000.000.000-00',
+            'setor' => 'Diretoria',
+            'nivel_acesso' => 5,
         ]);
         $this->adminToken = $this->adminUser->createToken('admin_token')->plainTextToken;
 

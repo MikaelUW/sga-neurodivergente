@@ -38,6 +38,7 @@ class OcorrenciaTest extends TestCase
         $token = $user->createToken('test')->plainTextToken;
 
         $aluno = Aluno::create(['nome' => 'Rafael Ramos']);
+        $user->monitora->alunos()->attach($aluno->id);
 
         $relatoOriginal = "O aluno teve uma crise devido a mudanças repentinas na rotina.";
         $intervencaoOriginal = "Redirecionamento para a sala de descompressão.";
@@ -65,6 +66,7 @@ class OcorrenciaTest extends TestCase
         $token = $user->createToken('test')->plainTextToken;
 
         $aluno = Aluno::create(['nome' => 'Rafael Ramos']);
+        $user->monitora->alunos()->attach($aluno->id);
         
         $this->withHeader('Authorization', 'Bearer ' . $token)
             ->postJson('/api/ocorrencias', [

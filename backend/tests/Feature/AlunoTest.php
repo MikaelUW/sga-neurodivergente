@@ -67,6 +67,11 @@ class AlunoTest extends TestCase
     public function test_usuario_autenticado_pode_listar_e_visualizar_alunos()
     {
         $monitora = $this->createMonitoraUser();
+        \App\Models\Monitora::create([
+            'user_id' => $monitora->id,
+            'classes' => 'Turma X',
+            'cpf' => '555.666.777-88',
+        ]);
         $token = $monitora->createToken('test')->plainTextToken;
 
         $aluno = Aluno::create([
@@ -74,6 +79,9 @@ class AlunoTest extends TestCase
             'data_nascimento' => '2017-03-10',
             'necessidades_especiais' => 'TDAH',
         ]);
+
+        // Vincula a monitora ao aluno (regra de minimização LGPD)
+        $monitora->monitora->alunos()->attach($aluno->id);
 
         $responseList = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->getJson('/api/alunos');
@@ -110,7 +118,9 @@ class AlunoTest extends TestCase
 
         $deleteResponse->assertStatus(200);
 
-        $this->assertDatabaseMissing('alunos', [
+        // Remoção é SoftDelete (preservação regulatória LGPD): o registro
+        // permanece no banco marcado como deletado.
+        $this->assertSoftDeleted('alunos', [
             'id' => $aluno->id,
         ]);
     }

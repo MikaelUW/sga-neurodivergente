@@ -25,7 +25,7 @@ class LaudoMedicoTest extends TestCase
 
     public function test_admin_pode_fazer_upload_de_laudo_medico_pdf()
     {
-        Storage::fake('public');
+        Storage::fake('local');
 
         $admin = $this->createAdminUser();
         $token = $admin->createToken('test')->plainTextToken;
@@ -44,12 +44,12 @@ class LaudoMedicoTest extends TestCase
             ->assertJsonPath('data.crm_medico', 'CRM/SP 123456');
 
         $laudo = $aluno->laudosMedicos()->first();
-        Storage::disk('public')->assertExists($laudo->path_arquivo);
+        Storage::disk('local')->assertExists($laudo->path_arquivo);
     }
 
     public function test_usuario_autenticado_pode_fazer_download_de_laudo()
     {
-        Storage::fake('public');
+        Storage::fake('local');
 
         $admin = $this->createAdminUser();
         $token = $admin->createToken('test')->plainTextToken;

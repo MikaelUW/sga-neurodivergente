@@ -1,0 +1,15 @@
+{
+  "name": "sga-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend do SGA Neurodivergente (protótipo integrado à API)",
+  "scripts": {
+    "serve": "http-server -p 5500 -c-1 --silent .",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "http-server": "^14.1.1"
+  }
+}
