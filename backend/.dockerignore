@@ -1,0 +1,28 @@
+# Dependências e artefatos (reinstalados no build)
+vendor/
+node_modules/
+
+# Symlink gerado por `artisan storage:link` (recriado no entrypoint)
+public/storage
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Storage volátil
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/public/*
+bootstrap/cache/*.php
+
+# VCS / caches
+.git/
+.gitignore
+.phpunit.result.cache
+.phpunit.cache/
+
+# Docs/testes não necessários na imagem de runtime
+*.md
