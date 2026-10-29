@@ -5,12 +5,6 @@ backend/.env
 backend/.env.backup
 backend/.env.production
 backend/.phpunit.result.cache
-backend/storage/*.key
-backend/storage/logs/*.log
-backend/storage/framework/cache/*
-backend/storage/framework/sessions/*
-backend/storage/framework/views/*
-backend/storage/app/public/*
 backend/public/storage
 backend/public/hot
 backend/bootstrap/cache/*.php
@@ -18,17 +12,40 @@ backend/Homestead.json
 backend/Homestead.yaml
 backend/auth.json
 
+# ─── Laravel storage: versiona só a estrutura (.gitkeep), ignora conteúdo ───
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/framework/testing/*
+backend/storage/app/public/*
+backend/storage/app/laudos_privados/*
+# mantém os placeholders que preservam os diretórios
+!backend/storage/**/.gitkeep
+
+# ─── Certificados TLS e dumps de backup (nunca commitar) ───
+backend/docker/nginx/certs/*
+!backend/docker/nginx/certs/.gitignore
+!backend/docker/nginx/certs/README.md
+*.dump
+*.dump.sha256
+
 # ─── Frontend (Node) ───────────────────────────────────────
 frontend/node_modules/
 frontend/dist/
 frontend/.cache/
 frontend/npm-debug.log*
 frontend/yarn-error.log*
+frontend/test-results/
+frontend/playwright-report/
+frontend/.playwright/
 
 # ─── Ambiente / segredos (nunca commitar) ──────────────────
 .env
 .env.*
 !.env.example
+!.env.production.example
 *.pem
 *.key
 
