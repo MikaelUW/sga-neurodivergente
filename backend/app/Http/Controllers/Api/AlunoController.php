@@ -16,17 +16,24 @@ class AlunoController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $perPage = min((int) $request->input('per_page', 15), 100);
+        $busca = $request->input('busca');
 
         if ($user->perfil === 'monitora') {
             $monitora = $user->monitora;
-            $alunos = $monitora ? $monitora->alunos()->with('responsavel')->get() : collect();
+            $query = $monitora ? $monitora->alunos()->with('responsavel') : Aluno::query()->whereRaw('1 = 0');
         } else {
-            $alunos = Aluno::with('responsavel')->get();
+            $query = Aluno::with('responsavel');
         }
 
-        return response()->json([
-            'data' => $alunos
-        ]);
+        // Busca por nome via blind index (igualdade exata, case-insensitive)
+        if (!empty($busca)) {
+            $query->buscarPorNome($busca);
+        }
+
+        $alunos = $query->paginate($perPage);
+
+        return response()->json($alunos);
     }
 
     /**
@@ -157,7 +164,7 @@ class AlunoController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $aluno = Aluno::find($id);
+        $aluno = Aluno::with('laudosMedicos')->find($id);
 
         if (!$aluno) {
             return response()->json([
@@ -166,7 +173,16 @@ class AlunoController extends Controller
         }
 
         $alunoId = $aluno->id;
-        $aluno->delete(); // SoftDelete
+
+        // Expurgo dos arquivos de laudo associados (evita arquivos órfãos no
+        // disco após a remoção do aluno) — conformidade LGPD de eliminação.
+        foreach ($aluno->laudosMedicos as $laudo) {
+            if ($laudo->path_arquivo && \Illuminate\Support\Facades\Storage::disk('local')->exists($laudo->path_arquivo)) {
+                \Illuminate\Support\Facades\Storage::disk('local')->delete($laudo->path_arquivo);
+            }
+        }
+
+        $aluno->delete(); // SoftDelete do registro (preservação regulatória)
 
         // Audit Log
         AuditLogService::registrar($alunoId, 'Aluno', 'remocao', $request);
@@ -181,6 +197,18 @@ class AlunoController extends Controller
      */
     public function exportarLgpd(Request $request, $id)
     {
+        $user = $request->user();
+
+        // Monitora só pode exportar aluno ao qual está vinculada (LGPD Art. 6º).
+        if ($user->perfil === 'monitora') {
+            $monitora = $user->monitora;
+            if (!$monitora || !$monitora->alunos()->where('alunos.id', $id)->exists()) {
+                return response()->json([
+                    'message' => 'Acesso negado: Voce nao esta vinculada a este aluno.'
+                ], 403);
+            }
+        }
+
         $aluno = Aluno::with(['responsavel', 'infoOperacionais', 'laudosMedicos', 'ocorrencias.monitora.user'])->find($id);
 
         if (!$aluno) {

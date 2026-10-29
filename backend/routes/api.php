@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\OcorrenciaController;
 use App\Http\Controllers\Api\LaudoMedicoController;
 use App\Http\Controllers\Api\PermissaoController;
 use App\Http\Controllers\Api\AuditoriaController;
+use App\Http\Controllers\Api\UsuarioController;
+use App\Http\Controllers\Api\MonitoraController;
+use App\Http\Controllers\Api\ResponsavelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,56 +18,88 @@ use App\Http\Controllers\Api\AuditoriaController;
 |--------------------------------------------------------------------------
 */
 
-// UC01: Autenticação pública
-Route::post('/login', [AuthController::class, 'login']);
+// UC01: Autenticação pública (com rate limiting contra força bruta)
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:login');
 
 // Rotas protegidas por autenticação via Sanctum
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     // Sessao do usuario
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    // Usuário troca a própria senha
+    Route::put('/me/senha', [UsuarioController::class, 'redefinirSenha']);
 
     // UC04: Consulta de Alunos e Perfis (Filtrado por permissão/vínculo)
     Route::get('/alunos', [AlunoController::class, 'index']);
     Route::get('/alunos/{id}', [AlunoController::class, 'show']);
 
-    // LGPD Art. 18: Portabilidade de Dados do Aluno para os Pais/Responsáveis
+    // LGPD Art. 18: Portabilidade de Dados do Aluno
     Route::get('/alunos/{id}/exportar-lgpd', [AlunoController::class, 'exportarLgpd']);
 
-    // UC06: Consultar Histórico de Ocorrências Decifradas
-    Route::get('/alunos/{alunoId}/ocorrencias', [OcorrenciaController::class, 'historicoPorAluno']);
+    // Protocolos operacionais (leitura)
+    Route::get('/alunos/{alunoId}/info-operacional', [InfoOperacionalController::class, 'index']);
+    Route::get('/info-operacional/{id}', [InfoOperacionalController::class, 'show']);
 
-    // UC09: Download Seguro de Laudo Médico (Disco Privado com Audit Log)
+    // Laudos (leitura + download)
+    Route::get('/alunos/{alunoId}/laudos', [LaudoMedicoController::class, 'index']);
     Route::get('/laudos/{id}/download', [LaudoMedicoController::class, 'download']);
 
-    // Rotas restritas para Monitoras e Admins
+    // UC06: Histórico de ocorrências por aluno + consulta unitária
+    Route::get('/alunos/{alunoId}/ocorrencias', [OcorrenciaController::class, 'historicoPorAluno']);
+    Route::get('/ocorrencias/{id}', [OcorrenciaController::class, 'show']);
+
+    // Ocorrências: criar (monitora/admin), editar e remover (regra de autoria/24h no controller)
     Route::middleware('perfil:monitora,admin')->group(function () {
-        // UC05: Registrar Ocorrências (Criptografia automatica dos fatos + Audit Log)
         Route::post('/ocorrencias', [OcorrenciaController::class, 'store']);
+        Route::put('/ocorrencias/{id}', [OcorrenciaController::class, 'update']);
+        Route::delete('/ocorrencias/{id}', [OcorrenciaController::class, 'destroy']);
     });
 
     // Rotas exclusivas para Administradores
     Route::middleware('perfil:admin')->group(function () {
 
-        // UC02: Manter Cadastro de Alunos (Com consentimento LGPD e Responsável Legal)
+        // --- Alunos (CRUD) ---
         Route::post('/alunos', [AlunoController::class, 'store']);
         Route::put('/alunos/{id}', [AlunoController::class, 'update']);
         Route::delete('/alunos/{id}', [AlunoController::class, 'destroy']);
 
-        // UC03: Vincular Informações Operacionais ao Aluno
+        // --- Protocolos operacionais (escrita) ---
         Route::post('/alunos/{alunoId}/info-operacional', [InfoOperacionalController::class, 'store']);
         Route::put('/info-operacional/{id}', [InfoOperacionalController::class, 'update']);
         Route::delete('/info-operacional/{id}', [InfoOperacionalController::class, 'destroy']);
 
-        // UC09: Upload de Laudo Médico PDF (Salvo em Storage Privado)
+        // --- Laudos (escrita) ---
         Route::post('/alunos/{alunoId}/laudos', [LaudoMedicoController::class, 'store']);
+        Route::put('/laudos/{id}', [LaudoMedicoController::class, 'update']);
+        Route::delete('/laudos/{id}', [LaudoMedicoController::class, 'destroy']);
 
-        // UC07: Gerenciar Permissões de Usuários
-        Route::get('/usuarios', [PermissaoController::class, 'index']);
+        // --- Ocorrências: visão geral (admin) ---
+        Route::get('/ocorrencias', [OcorrenciaController::class, 'index']);
+
+        // --- Responsável legal ---
+        Route::get('/responsaveis/{id}', [ResponsavelController::class, 'show']);
+        Route::put('/responsaveis/{id}', [ResponsavelController::class, 'update']);
+
+        // --- Usuários (admin e monitora): CRUD completo ---
+        Route::get('/usuarios', [UsuarioController::class, 'index']);
+        Route::post('/usuarios', [UsuarioController::class, 'store']);
+        Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
+        Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
+        Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+        Route::put('/usuarios/{id}/senha', [UsuarioController::class, 'redefinirSenha']);
+        // UC07: mantém o endpoint legado de nível de acesso
         Route::put('/usuarios/{usuarioId}/permissoes', [PermissaoController::class, 'updateNivelAcesso']);
 
-        // LGPD Art. 37: Trilha de Auditoria de Acessos a Dados Sensíveis
+        // --- Monitoras: listagem e vínculos com alunos ---
+        Route::get('/monitoras', [MonitoraController::class, 'index']);
+        Route::get('/monitoras/{id}', [MonitoraController::class, 'show']);
+        Route::get('/monitoras/{id}/alunos', [MonitoraController::class, 'listarAlunos']);
+        Route::post('/monitoras/{id}/alunos', [MonitoraController::class, 'vincularAluno']);
+        Route::delete('/monitoras/{id}/alunos/{alunoId}', [MonitoraController::class, 'desvincularAluno']);
+
+        // LGPD Art. 37: Trilha de Auditoria
         Route::get('/auditoria/logs', [AuditoriaController::class, 'index']);
     });
 });

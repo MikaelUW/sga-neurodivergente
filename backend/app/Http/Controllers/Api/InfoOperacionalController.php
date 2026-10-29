@@ -10,6 +10,37 @@ use Illuminate\Http\Request;
 class InfoOperacionalController extends Controller
 {
     /**
+     * Listar protocolos operacionais de um aluno.
+     */
+    public function index(Request $request, $alunoId)
+    {
+        $aluno = Aluno::find($alunoId);
+        if (!$aluno) {
+            return response()->json(['message' => 'Aluno nao encontrado.'], 404);
+        }
+        $user = $request->user();
+        if ($user->perfil === 'monitora') {
+            $monitora = $user->monitora;
+            if (!$monitora || !$monitora->alunos()->where('alunos.id', $alunoId)->exists()) {
+                return response()->json(['message' => 'Acesso negado.'], 403);
+            }
+        }
+        return response()->json(['data' => $aluno->infoOperacionais()->get()]);
+    }
+
+    /**
+     * Ver um protocolo isolado.
+     */
+    public function show($id)
+    {
+        $info = InfoOperacional::find($id);
+        if (!$info) {
+            return response()->json(['message' => 'Informacao operacional nao encontrada.'], 404);
+        }
+        return response()->json(['data' => $info]);
+    }
+
+    /**
      * UC03 - Vincular Informações Operacionais ao Aluno
      */
     public function store(Request $request, $alunoId)

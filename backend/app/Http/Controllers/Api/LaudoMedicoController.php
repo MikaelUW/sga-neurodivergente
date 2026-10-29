@@ -12,6 +12,30 @@ use Illuminate\Support\Facades\Storage;
 class LaudoMedicoController extends Controller
 {
     /**
+     * Listar laudos (metadados) de um aluno.
+     * Admin vê qualquer um; monitora só de aluno vinculado.
+     */
+    public function index(Request $request, $alunoId)
+    {
+        $aluno = Aluno::find($alunoId);
+        if (!$aluno) {
+            return response()->json(['message' => 'Aluno nao encontrado.'], 404);
+        }
+
+        $user = $request->user();
+        if ($user->perfil === 'monitora') {
+            $monitora = $user->monitora;
+            if (!$monitora || !$monitora->alunos()->where('alunos.id', $alunoId)->exists()) {
+                return response()->json(['message' => 'Acesso negado aos laudos deste aluno.'], 403);
+            }
+        }
+
+        // Retorna apenas metadados (não o arquivo)
+        $laudos = $aluno->laudosMedicos()->orderBy('data_upload', 'desc')->get();
+        return response()->json(['data' => $laudos]);
+    }
+
+    /**
      * UC09 - Upload de Laudo Médico PDF (LGPD: Salvo em Storage Privado)
      */
     public function store(Request $request, $alunoId)
@@ -79,5 +103,63 @@ class LaudoMedicoController extends Controller
         AuditLogService::registrar($laudo->aluno_id, 'LaudoMedico', 'download', $request);
 
         return Storage::disk('local')->download($laudo->path_arquivo);
+    }
+
+    /**
+     * Editar metadados do laudo (CRM/especialidade) e, opcionalmente, trocar
+     * o arquivo PDF. Exclusivo de admin.
+     */
+    public function update(Request $request, $id)
+    {
+        $laudo = LaudoMedico::find($id);
+        if (!$laudo) {
+            return response()->json(['message' => 'Laudo nao encontrado.'], 404);
+        }
+
+        $validated = $request->validate([
+            'crm_medico' => 'sometimes|required|string',
+            'especialidade' => 'sometimes|required|string',
+            'arquivo' => 'sometimes|file|mimes:pdf|max:10240',
+        ]);
+
+        if ($request->hasFile('arquivo')) {
+            // Remove o arquivo antigo e grava o novo
+            if ($laudo->path_arquivo && Storage::disk('local')->exists($laudo->path_arquivo)) {
+                Storage::disk('local')->delete($laudo->path_arquivo);
+            }
+            $laudo->path_arquivo = $request->file('arquivo')->store('laudos_privados', 'local');
+        }
+        if (isset($validated['crm_medico'])) $laudo->crm_medico = $validated['crm_medico'];
+        if (isset($validated['especialidade'])) $laudo->especialidade = $validated['especialidade'];
+        $laudo->save();
+
+        AuditLogService::registrar($laudo->aluno_id, 'LaudoMedico', 'edicao', $request);
+
+        return response()->json([
+            'message' => 'Laudo atualizado com sucesso.',
+            'data' => $laudo->fresh(),
+        ]);
+    }
+
+    /**
+     * Remover laudo: apaga o registro E o arquivo físico (expurgo LGPD).
+     * Exclusivo de admin.
+     */
+    public function destroy(Request $request, $id)
+    {
+        $laudo = LaudoMedico::find($id);
+        if (!$laudo) {
+            return response()->json(['message' => 'Laudo nao encontrado.'], 404);
+        }
+
+        $alunoId = $laudo->aluno_id;
+        if ($laudo->path_arquivo && Storage::disk('local')->exists($laudo->path_arquivo)) {
+            Storage::disk('local')->delete($laudo->path_arquivo);
+        }
+        $laudo->delete();
+
+        AuditLogService::registrar($alunoId, 'LaudoMedico', 'remocao', $request);
+
+        return response()->json(['message' => 'Laudo removido com sucesso.']);
     }
 }

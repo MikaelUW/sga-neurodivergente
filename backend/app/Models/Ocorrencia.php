@@ -21,6 +21,10 @@ class Ocorrencia extends Model
         'tipo_intervencao',
     ];
 
+    protected $casts = [
+        'data_hora' => 'datetime',
+    ];
+
     protected function descricaoFatos(): Attribute
     {
         $service = new CriptografiaService();

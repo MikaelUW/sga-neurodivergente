@@ -38,8 +38,25 @@ class Aluno extends Model
         $service = new CriptografiaService();
         return Attribute::make(
             get: fn ($value) => $service->decifrarDados($value),
-            set: fn ($value) => $service->cifrarDados($value),
+            set: fn ($value) => [
+                'nome' => $service->cifrarDados($value),
+                // Mantém o blind index sincronizado com o nome.
+                'nome_hash' => $service->blindIndex($value),
+            ],
         );
+    }
+
+    /**
+     * Busca alunos por nome usando o blind index (igualdade exata,
+     * case-insensitive). Não expõe o texto claro no SQL.
+     */
+    public function scopeBuscarPorNome($query, ?string $nome)
+    {
+        if (is_null($nome) || trim($nome) === '') {
+            return $query;
+        }
+        $hash = (new CriptografiaService())->blindIndex($nome);
+        return $query->where('nome_hash', $hash);
     }
 
     protected function necessidadesEspeciais(): Attribute
